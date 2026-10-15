@@ -15,12 +15,30 @@ function yk_journal_desc( $text, $len = 158 ) {
 	return $text;
 }
 
+/* Bahasa artikel: default Indonesia; Inggris bila meta _yk_lang = en atau bertag "english" */
+function yk_journal_is_en( $post = null ) {
+	$post = get_post( $post );
+	if ( ! $post || 'post' !== $post->post_type ) {
+		return false;
+	}
+	return 'en' === get_post_meta( $post->ID, '_yk_lang', true ) || has_tag( 'english', $post );
+}
+
+add_filter( 'language_attributes', function ( $out ) {
+	if ( is_admin() || ! is_singular( 'post' ) ) {
+		return $out;
+	}
+	$lang = yk_journal_is_en( get_queried_object() ) ? 'en-US' : 'id-ID';
+	return preg_match( '/lang="[^"]*"/', $out ) ? preg_replace( '/lang="[^"]*"/', 'lang="' . $lang . '"', $out ) : trim( $out . ' lang="' . $lang . '"' );
+}, 20 );
+
 add_action( 'wp_head', function () {
 	if ( is_admin() ) {
 		return;
 	}
 	if ( is_singular( 'post' ) ) {
 		$p     = get_queried_object();
+		$en    = yk_journal_is_en( $p );
 		$title = html_entity_decode( get_the_title( $p ), ENT_QUOTES, 'UTF-8' );
 		$desc  = yk_journal_desc( has_excerpt( $p ) ? $p->post_excerpt : $p->post_content );
 		$url   = get_permalink( $p );
@@ -28,7 +46,7 @@ add_action( 'wp_head', function () {
 		echo "\n" . '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
 		echo '<meta property="og:type" content="article">' . "\n";
 		echo '<meta property="og:site_name" content="Yulika Florist">' . "\n";
-		echo '<meta property="og:locale" content="id_ID">' . "\n";
+		echo '<meta property="og:locale" content="' . ( $en ? 'en_US' : 'id_ID' ) . '">' . "\n";
 		echo '<meta property="og:title" content="' . esc_attr( $title ) . '">' . "\n";
 		echo '<meta property="og:description" content="' . esc_attr( $desc ) . '">' . "\n";
 		echo '<meta property="og:url" content="' . esc_url( $url ) . '">' . "\n";
@@ -54,7 +72,7 @@ add_action( 'wp_head', function () {
 				'image'            => $img ? array( $img ) : array(),
 				'datePublished'    => get_the_date( 'c', $p ),
 				'dateModified'     => get_the_modified_date( 'c', $p ),
-				'inLanguage'       => 'id-ID',
+				'inLanguage'       => $en ? 'en-US' : 'id-ID',
 				'mainEntityOfPage' => $url,
 				'author'           => array( '@type' => 'Organization', 'name' => 'Yulika Florist', 'url' => home_url( '/' ) ),
 				'publisher'        => array_filter( array(
