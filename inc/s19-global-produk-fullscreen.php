@@ -232,7 +232,7 @@ body.ykp-page .yk-sbar,body.ykp-page .elementor-location-footer,body.ykp-page fo
 			<h1><?php echo esc_html( $name ); ?></h1>
 			<p class="ykp-cap"><?php echo esc_html( $cap ); ?></p>
 			<p class="ykp-price"><?php echo $was ? '<s>' . esc_html( $was ) . '</s>' : ''; ?><?php echo esc_html( $price ); ?></p>
-			<p class="ykp-spec"><b>Specifications:</b> paper/box type &amp; colour and filler flowers may vary with availability; main flowers and style stay the same.</p>
+			<p class="ykp-spec"><b>Specifications:</b> Wrapping and filler flowers may vary; main flowers and style stay the same. If a main flower is out of stock, we&rsquo;ll contact you to agree on an equal-value substitute.</p>
 		</div>
 		<div class="ykp-act">
 			<?php if ( $soon ) : ?><a class="ykp-next" href="<?php echo esc_attr( 'https://wa.me/6281315881538?text=' . rawurlencode( 'Hi Yulika Florist, I would like to order / ask the price of ' . wp_strip_all_tags( $name ) . ': ' . get_permalink( $pid ) ) ); ?>" target="_blank" rel="noopener nofollow">Ask Price <span aria-hidden="true">&rarr;</span></a><?php else : ?><a class="ykp-next" href="<?php echo esc_url( $buy ); ?>" rel="nofollow">Next <span aria-hidden="true">&rarr;</span></a><?php endif; ?>
