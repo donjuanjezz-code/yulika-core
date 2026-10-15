@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Yulika Core
  * Description: Fitur custom Yulika Florist (pengganti Code Snippets). Dikelola lewat GitHub repo donjuanjezz-code/yulika-core, auto-deploy via FTP.
- * Version: 0.2.0
+ * Version: 0.3.0
  * Author: Yulika Florist
  * Requires PHP: 7.4
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'YK_CORE_VERSION', '0.2.0' );
+define( 'YK_CORE_VERSION', '0.3.0' );
 define( 'YK_CORE_DIR', __DIR__ );
 define( 'YK_CORE_URL', plugin_dir_url( __FILE__ ) );
 
