@@ -60,6 +60,7 @@ function yk_imgopt_one( $att, $dry ) {
 		$before = filesize( $f );
 		$after  = $before;
 		$tmp    = $f . '.yktmp.' . ( 'image/webp' === $mime ? 'webp' : 'jpg' );
+		$swap   = false;
 		$ed     = wp_get_image_editor( $f );
 		if ( ! is_wp_error( $ed ) ) {
 			$ed->set_quality( $q );
@@ -68,16 +69,11 @@ function yk_imgopt_one( $att, $dry ) {
 				$n = filesize( $tmp );
 				if ( $n < $before * 0.92 ) {
 					$after = $n;
-					if ( ! $dry ) {
-						@rename( $tmp, $f );
-					}
-				}
-				if ( file_exists( $tmp ) ) {
-					@unlink( $tmp );
+					$swap  = ! $dry;
 				}
 			}
 		}
-		/* WebP pendamping untuk JPG (dipakai Converter for Media) */
+		/* WebP pendamping untuk JPG (Converter for Media), dibuat dari file asli sebelum JPG diganti */
 		if ( 'image/jpeg' === $mime ) {
 			$wf = $wdir . $s['file'] . '.webp';
 			$wb = file_exists( $wf ) ? filesize( $wf ) : PHP_INT_MAX;
@@ -103,6 +99,12 @@ function yk_imgopt_one( $att, $dry ) {
 					}
 				}
 			}
+		}
+		if ( $swap ) {
+			@rename( $tmp, $f );
+		}
+		if ( file_exists( $tmp ) ) {
+			@unlink( $tmp );
 		}
 		$out['files']++;
 		$out['before'] += $before;
