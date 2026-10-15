@@ -20,12 +20,13 @@ add_action( 'wp_footer', function () {
 		'leaf'  => '<path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15M5 19l7-7"/>',
 		'bag'   => '<path d="M5 8h14l-1 12H6L5 8Zm4 0V6a3 3 0 0 1 6 0v2"/>',
 		'truck' => '<path d="M3 6h11v9H3zM14 9h4l3 3v3h-7M7 18.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/>',
+		'hand'  => '<path d="M12 3c1.5 1.6 1.5 3.4 0 5-1.5-1.6-1.5-3.4 0-5Zm-4.5 2.5c2 .2 3.2 1.5 3.4 3.5-2-.2-3.2-1.5-3.4-3.5Zm9 0c-2 .2-3.2 1.5-3.4 3.5 2-.2 3.2-1.5 3.4-3.5ZM12 8v6M4 15.5l3.2-.8c.9-.2 1.8 0 2.5.5l1.3.9h3.5a1.3 1.3 0 0 1 0 2.6H11m-7 2.8 3-1.2 6 .9 6.2-3.4a1.4 1.4 0 0 0-1.3-2.5L16 16.6"/>',
 		'arch'  => '<path d="M5 21V11a7 7 0 0 1 14 0v10M9 21v-8a3 3 0 0 1 6 0v8M3 21h18"/>',
 	);
 	$rows = array(
-		array( 'store', 'Toko fisik di Kelapa Gading', 'bisa datang & pilih langsung' ),
+		array( 'store', 'Toko fisik di Kelapa Gading', 'ready stock, bisa datang langsung' ),
+		array( 'hand', '100% dirangkai florist kami', 'tidak pernah dioper ke florist lain' ),
 		array( 'leaf', 'Kebun sendiri di Puncak', '+ importir bunga langsung' ),
-		array( 'bag', 'Ready stock di toko', 'tanya stok hari ini via WA' ),
 		array( 'truck', 'Same-day delivery', 'seluruh Jakarta & Bekasi' ),
 		array( 'arch', 'Buket, papan bunga, hingga', 'dekorasi wedding & interior' ),
 	);
@@ -35,8 +36,8 @@ add_action( 'wp_footer', function () {
  <div class="ykw-box">
   <button class="ykw-x" type="button" aria-label="Tutup" data-x>×</button>
   <p class="ykw-e">Welcome to Yulika Florist</p>
-  <h3 id="ykw-t">Florist pertama di Kelapa&nbsp;Gading</h3>
-  <p class="ykw-s">Kebun sendiri. Dirangkai sendiri. Dikirim hari ini.</p>
+  <h3 id="ykw-t">The First Florist in Kelapa&nbsp;Gading</h3>
+  <p class="ykw-s">Kebun sendiri. Dirangkai sendiri. Dikirim hari&nbsp;ini.</p>
   <ul class="ykw-l">
 	<?php foreach ( $rows as $r ) : ?>
    <li><svg viewBox="0 0 24 24" aria-hidden="true"><?php echo $ico[ $r[0] ]; // phpcs:ignore ?></svg><span><b><?php echo esc_html( $r[1] ); ?></b> <?php echo esc_html( $r[2] ); ?></span></li>
