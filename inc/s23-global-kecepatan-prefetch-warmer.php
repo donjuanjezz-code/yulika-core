@@ -104,7 +104,7 @@ function yk_warm_run( $budget = 40, $max = 80 ) {
 }
 
 add_filter( 'cron_schedules', function ( $s ) {
-	$s['yk_10min'] = array( 'interval' => 900, 'display' => 'Every 15 minutes (Yulika)' );
+	$s['yk_10min'] = array( 'interval' => 600, 'display' => 'Every 10 minutes (Yulika)' );
 	return $s;
 } );
 add_action( 'init', function () {

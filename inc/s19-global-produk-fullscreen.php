@@ -58,12 +58,43 @@ function yk_pv_can_show( $p ) {
 	return $p && ( ( function_exists( 'yk_can_buy' ) && yk_can_buy( $p ) ) || yk_is_soon( $p ) );
 }
 
+
+/* 15 Okt 2026: label Indonesia untuk title/meta produk (pembeli retail mencari "buket mawar", "papan bunga", dst.) */
+function yk_pv_seo_label( $p ) {
+	$slugs = array();
+	foreach ( (array) get_the_terms( $p->get_id(), 'product_cat' ) as $t ) {
+		if ( $t && ! is_wp_error( $t ) && isset( $t->slug ) ) {
+			$slugs[] = $t->slug;
+		}
+	}
+	$type = 'Rangkaian Bunga';
+	foreach ( array( 'flower-boards' => 'Papan Bunga', 'standing-flowers' => 'Standing Flower', 'hampers' => 'Hampers', 'flower-boxes-baskets' => 'Flower Box', 'table-arrangements' => 'Rangkaian Bunga Meja', 'bouquet' => 'Buket' ) as $k => $v ) {
+		if ( in_array( $k, $slugs, true ) ) {
+			$type = $v;
+			break;
+		}
+	}
+	$flower = '';
+	if ( 'Papan Bunga' !== $type && 'Hampers' !== $type ) {
+		foreach ( array( 'sunflower' => 'Bunga Matahari', 'tulips' => 'Tulip', 'orchid' => 'Anggrek', 'lily' => 'Lily', 'carnation' => 'Carnation', 'rose' => 'Mawar' ) as $k => $v ) {
+			if ( in_array( $k, $slugs, true ) ) {
+				$flower = $v;
+				break;
+			}
+		}
+		if ( ! $flower && 'Buket' === $type ) {
+			$flower = 'Bunga';
+		}
+	}
+	return trim( $type . ' ' . $flower );
+}
+
 /* Title & meta halaman produk */
 add_filter( 'pre_get_document_title', function ( $t ) {
 	if ( function_exists( 'is_product' ) && is_product() ) {
 		$p = wc_get_product( get_queried_object_id() );
 		if ( yk_pv_can_show( $p ) ) {
-			return get_the_title( $p->get_id() ) . ' – ' . yk_pv_caption( $p ) . ' | Yulika Florist';
+			return get_the_title( $p->get_id() ) . ' – ' . yk_pv_seo_label( $p ) . ' Jakarta | Yulika Florist';
 		}
 	}
 	return $t;
@@ -94,7 +125,7 @@ add_action( 'template_redirect', function () {
 
 	add_action( 'wp_head', function () use ( $p, $name, $cap, $price, $img_ids ) {
 		$full = $img_ids ? wp_get_attachment_image_url( $img_ids[0], 'full' ) : '';
-		$desc = $cap . '. ' . $price . ' · Same-day delivery across Jakarta & Bekasi · Yulika Florist.';
+		$desc = yk_pv_seo_label( $p ) . ' ' . wp_strip_all_tags( $name ) . ': ' . $cap . '. ' . ( yk_is_soon( $p ) ? 'Segera hadir' : 'Rp' . number_format( (float) $p->get_price(), 0, ',', '.' ) ) . ' · Kirim hari yang sama ke Jakarta & Bekasi · Yulika Florist.';
 		echo '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
 		echo '<meta property="og:type" content="product"><meta property="og:site_name" content="Yulika Florist">' . "\n";
 		echo '<meta property="og:title" content="' . esc_attr( $name . ' – ' . $cap ) . '">' . "\n";

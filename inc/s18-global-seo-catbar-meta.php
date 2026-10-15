@@ -31,41 +31,92 @@ function yk_seo_term_min( $term_id ) {
 }
 
 function yk_seo_rp( $n ) {
-	return 'Rp' . number_format( (float) $n, 0, '.', ',' );
+	return 'Rp' . number_format( (float) $n, 0, ',', '.' );
 }
 
 /* Teks SEO per kategori: [title, meta description, intro]. {min} = harga termurah */
 function yk_seo_copy( $slug ) {
+	/* 15 Okt 2026: judul & deskripsi Google versi Indonesia (pembeli retail mencari dalam bahasa Indonesia); istilah Inggris dipertahankan di intro */
 	$c = array(
 		'bouquet'                 => array(
-			'Flower Bouquets Jakarta – Same-Day Delivery | Yulika Florist',
-			'Hand-tied flower bouquets (buket bunga) from {min}: roses, tulips, lilies & imported blooms. Same-day delivery across Jakarta & Bekasi. Order online or WhatsApp.',
-			'Hand-tied flower bouquets (<em>buket bunga</em>) designed by our florists in Kelapa Gading — roses, tulips, lilies and imported blooms for birthdays, anniversaries and graduations. Same-day delivery across Jakarta and Bekasi, from {min}.',
+			'Buket Bunga Jakarta – Kirim Hari Ini | Yulika Florist',
+			'Buket bunga segar mulai {min}: mawar, tulip, lily & bunga impor, dirangkai florist di Kelapa Gading. Kirim hari yang sama ke Jakarta & Bekasi. Pesan online/WA.',
+			'Buket bunga (<em>flower bouquet</em>) segar yang dirangkai florist kami di Kelapa Gading — mawar, tulip, lily, dan bunga impor untuk ulang tahun, anniversary, dan wisuda. Kirim hari yang sama ke seluruh Jakarta dan Bekasi, mulai {min}.',
 		),
 		'flower-boards'           => array(
-			'Flower Boards Jakarta (Papan Bunga) | Yulika Florist',
-			'Custom flower boards (papan bunga) for grand openings, congratulations, weddings & condolences. Made with your message, delivered across Jakarta & Bekasi.',
-			'Flower boards (<em>papan bunga</em>) for grand openings, congratulations, weddings and condolences — custom-made with your message and delivered across Jakarta and Bekasi.',
+			'Papan Bunga Jakarta – Grand Opening, Wedding & Duka Cita | Yulika',
+			'Papan bunga custom mulai {min} untuk grand opening, ucapan selamat, pernikahan & duka cita. Tulisan sesuai pesanan, kirim ke seluruh Jakarta & Bekasi.',
+			'Papan bunga (<em>flower board</em>) untuk grand opening, ucapan selamat, pernikahan, dan duka cita — tulisan dibuat sesuai pesananmu dan dikirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
 		),
 		'hampers'                 => array(
-			'Hampers & Gift Sets Jakarta – Eid, Christmas & Corporate | Yulika Florist',
-			'Curated hampers & gift sets from {min}: tea sets, artisan food, cookies & flowers for Eid, Christmas, Chinese New Year and corporate gifts. Jakarta delivery.',
-			'Curated hampers and gift sets — tea sets, artisan food, cookies and flowers — for Eid, Christmas, Chinese New Year and corporate gifting. Delivered across Jakarta and Bekasi, from {min}.',
+			'Hampers & Parcel Jakarta – Lebaran, Natal, Imlek | Yulika Florist',
+			'Hampers & parcel mulai {min}: tea set, kue, makanan artisan & bunga untuk Lebaran, Natal, Imlek dan hadiah korporat. Kirim ke Jakarta & Bekasi.',
+			'Hampers dan parcel pilihan — tea set, kue, makanan artisan, dan bunga — untuk Lebaran, Natal, Imlek, dan hadiah korporat. Dikirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
 		),
 		'love-anniversary'        => array(
-			'Anniversary & Romantic Flowers Jakarta | Yulika Florist',
-			'Romantic flowers for anniversaries & Valentine’s from {min}: red roses, pink bouquets and flower boxes with teddy bears or chocolates. Same-day delivery in Jakarta.',
-			'Romantic flowers for anniversaries, Valentine’s and “just because” — red roses, pink bouquets and flower boxes, some with a teddy bear or chocolates. Same-day delivery across Jakarta, from {min}.',
+			'Bunga Anniversary & Bunga untuk Pacar Jakarta | Yulika Florist',
+			'Bunga romantis mulai {min}: buket mawar merah, bunga pink & flower box dengan boneka atau cokelat. Untuk anniversary & pacar, kirim hari yang sama di Jakarta.',
+			'Bunga romantis untuk anniversary, Valentine, atau sekadar kejutan untuk pacar — buket mawar merah, bunga pink, dan <em>flower box</em>, sebagian dengan boneka atau cokelat. Kirim hari yang sama ke seluruh Jakarta, mulai {min}.',
 		),
 		'graduation'              => array(
-			'Graduation Bouquets Jakarta (Buket Wisuda) | Yulika Florist',
-			'Graduation bouquets (buket wisuda) from {min}: sunflowers, roses & tulips in signature wrapping. Order ahead for graduation day — delivery across Jakarta.',
-			'Graduation bouquets (<em>buket wisuda</em>) to celebrate the big day — sunflowers, roses and tulips in our signature wrapping. Order ahead for graduation day; delivery across Jakarta and Bekasi, from {min}.',
+			'Buket Wisuda Jakarta – Bunga Wisuda Segar | Yulika Florist',
+			'Buket wisuda mulai {min}: bunga matahari, mawar, gerbera & tulip dengan wrapping cantik. Pesan lebih awal untuk hari wisuda, kirim ke seluruh Jakarta.',
+			'Buket wisuda (<em>graduation bouquet</em>) untuk merayakan hari kelulusan — bunga matahari, mawar, gerbera, dan tulip dengan wrapping khas Yulika. Pesan lebih awal untuk hari H; kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
 		),
 		'budget-dibawah-500-ribu' => array(
-			'Flowers Under Rp500,000 – Affordable Bouquets Jakarta | Yulika Florist',
-			'Beautiful flowers under Rp500,000 — affordable bouquets that still look premium, made with fresh & imported blooms. Same-day delivery across Jakarta & Bekasi.',
-			'Beautiful flowers under Rp500,000 — affordable bouquets that still look premium, made with fresh and imported blooms. Same-day delivery across Jakarta and Bekasi.',
+			'Buket Bunga Murah di Bawah 500 Ribu Jakarta | Yulika Florist',
+			'Buket bunga di bawah Rp500.000 yang tetap terlihat premium, dari bunga segar & impor. Kirim hari yang sama ke seluruh Jakarta & Bekasi. Pesan online/WA.',
+			'Buket bunga di bawah Rp500.000 yang tetap terlihat premium, dirangkai dari bunga segar dan impor. Kirim hari yang sama ke seluruh Jakarta dan Bekasi.',
+		),
+		'birthday'                => array(
+			'Bunga Ulang Tahun Jakarta – Buket & Flower Box | Yulika Florist',
+			'Bunga ulang tahun mulai {min}: buket, flower box & rangkaian bunga untuk pasangan, ibu, sahabat atau rekan kerja. Kirim hari yang sama ke Jakarta & Bekasi.',
+			'Bunga ulang tahun untuk pasangan, ibu, sahabat, atau rekan kerja — buket, <em>flower box</em>, dan rangkaian meja. Kirim hari yang sama ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'congratulations'         => array(
+			'Bunga Ucapan Selamat & Grand Opening Jakarta | Yulika Florist',
+			'Bunga ucapan selamat mulai {min}: standing flower, papan bunga & rangkaian meja untuk grand opening, promosi jabatan dan peresmian. Kirim ke Jakarta & Bekasi.',
+			'Bunga ucapan selamat untuk grand opening, promosi jabatan, dan peresmian — <em>standing flower</em>, papan bunga, dan rangkaian meja. Kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'sympathy-condolences'    => array(
+			'Bunga Duka Cita Jakarta – Kirim ke Rumah Duka | Yulika Florist',
+			'Bunga duka cita mulai {min}: rangkaian & buket bunga putih untuk rumah duka atau keluarga. Kartu ucapan sesuai pesanan, kirim ke seluruh Jakarta & Bekasi.',
+			'Bunga duka cita (<em>sympathy flowers</em>) dalam nuansa putih dan lembut, untuk dikirim ke rumah duka atau rumah keluarga. Kartu ucapan ditulis sesuai pesanan; kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'standing-flowers'        => array(
+			'Standing Flower Jakarta – Grand Opening & Wedding | Yulika Florist',
+			'Standing flower mulai {min} untuk grand opening, pernikahan & acara kantor: lily, mawar & anggrek segar dengan pita ucapan. Kirim ke Jakarta & Bekasi.',
+			'<em>Standing flower</em> untuk grand opening, pernikahan, dan acara kantor — lily, mawar, dan anggrek segar dengan pita ucapan. Kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'table-arrangements'      => array(
+			'Rangkaian Bunga Meja Jakarta – Table Arrangement | Yulika Florist',
+			'Rangkaian bunga meja mulai {min} untuk rumah, kantor, resepsionis & hadiah. Bunga segar dalam vas atau box, kirim hari yang sama ke Jakarta & Bekasi.',
+			'Rangkaian bunga meja (<em>table arrangement</em>) untuk rumah, lobi kantor, meja resepsionis, atau hadiah — bunga segar dalam vas atau box. Kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'flower-boxes-baskets'    => array(
+			'Flower Box & Keranjang Bunga Jakarta | Yulika Florist',
+			'Flower box & keranjang bunga mulai {min}: mawar, hydrangea & lily dalam box cantik, sebagian dengan boneka atau cokelat. Kirim ke seluruh Jakarta & Bekasi.',
+			'<em>Flower box</em> dan keranjang bunga — mawar, hydrangea, dan lily dalam box cantik, sebagian dengan boneka atau cokelat. Kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'rose'                    => array(
+			'Buket Mawar Jakarta – Mawar Merah, Pink & Putih | Yulika Florist',
+			'Buket & rangkaian mawar mulai {min}: mawar merah, pink, putih, kuning & peach, lokal maupun impor. Kirim hari yang sama ke seluruh Jakarta & Bekasi.',
+			'Buket dan rangkaian mawar — merah, pink, putih, kuning, dan peach, dari mawar lokal maupun impor. Kirim hari yang sama ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'lily'                    => array(
+			'Buket Bunga Lily Jakarta – Lily Putih, Pink & Kuning | Yulika',
+			'Buket & rangkaian lily mulai {min}: lily putih, pink stargazer & kuning untuk ulang tahun, pernikahan dan duka cita. Kirim ke seluruh Jakarta & Bekasi.',
+			'Buket dan rangkaian bunga lily — lily putih, pink stargazer, dan kuning — untuk ulang tahun, pernikahan, dan duka cita. Kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
+		),
+		'new-baby-get-well'       => array(
+			'Bunga Kelahiran Bayi & Get Well Soon Jakarta | Yulika Florist',
+			'Bunga untuk kelahiran bayi & orang sakit mulai {min}: warna lembut, aroma ringan, kirim ke rumah atau rumah sakit di Jakarta & Bekasi.',
+			'Bunga untuk menyambut bayi baru lahir atau mendoakan cepat sembuh — warna lembut dan aroma ringan, bisa dikirim ke rumah atau rumah sakit di Jakarta dan Bekasi, mulai {min}.',
+		),
+		'wedding-engagement'      => array(
+			'Bunga Pernikahan & Lamaran Jakarta | Yulika Florist',
+			'Bunga untuk pernikahan, lamaran & sangjit mulai {min}: buket, standing flower & rangkaian. Dekorasi event juga tersedia. Kirim ke seluruh Jakarta.',
+			'Bunga untuk pernikahan, lamaran, dan sangjit — buket, <em>standing flower</em>, dan rangkaian ucapan. Untuk dekorasi venue, lihat proyek event kami. Kirim ke seluruh Jakarta dan Bekasi, mulai {min}.',
 		),
 	);
 	return isset( $c[ $slug ] ) ? $c[ $slug ] : null;
@@ -80,8 +131,8 @@ function yk_seo_current() {
 	$cur = array();
 	if ( is_front_page() ) {
 		$cur = array(
-			'title' => 'Yulika Florist | Flower Delivery Jakarta – Bouquets, Flower Boards & Hampers',
-			'desc'  => 'Florist in Kelapa Gading, Jakarta: flower bouquets, flower boards (papan bunga), hampers & gift sets. Same-day delivery across Jakarta & Bekasi. Order online or WhatsApp.',
+			'title' => 'Toko Bunga Jakarta & Florist Kelapa Gading | Yulika Florist',
+			'desc'  => 'Florist di Kelapa Gading: buket bunga, papan bunga, standing flower & hampers. Kirim hari yang sama ke seluruh Jakarta & Bekasi. Pesan online atau WhatsApp.',
 			'img'   => '',
 		);
 	} elseif ( function_exists( 'is_product_category' ) && is_product_category() ) {
@@ -94,8 +145,8 @@ function yk_seo_current() {
 				$title = $copy[0];
 				$desc  = $copy[1];
 			} else {
-				$title = $name . ' – Flower Delivery Jakarta | Yulika Florist';
-				$desc  = $name . ' at Yulika Florist' . ( $min ? ' from {min}' : '' ) . ': fresh flower arrangements made in Kelapa Gading. Same-day delivery across Jakarta & Bekasi.';
+				$title = $name . ' – Toko Bunga Jakarta | Yulika Florist';
+				$desc  = $name . ' di Yulika Florist' . ( $min ? ' mulai {min}' : '' ) . ': rangkaian bunga segar dari florist Kelapa Gading. Kirim hari yang sama ke seluruh Jakarta & Bekasi.';
 			}
 			$desc = str_replace( '{min}', yk_seo_rp( $min ), $desc );
 			$img  = '';
@@ -131,7 +182,7 @@ add_action( 'wp_head', function () {
 	echo "\n" . '<meta name="description" content="' . esc_attr( $c['desc'] ) . '">' . "\n";
 	echo '<meta property="og:type" content="website">' . "\n";
 	echo '<meta property="og:site_name" content="Yulika Florist">' . "\n";
-	echo '<meta property="og:locale" content="en_US">' . "\n";
+	echo '<meta property="og:locale" content="id_ID">' . "\n";
 	echo '<meta property="og:title" content="' . esc_attr( $c['title'] ) . '">' . "\n";
 	echo '<meta property="og:description" content="' . esc_attr( $c['desc'] ) . '">' . "\n";
 	echo '<meta property="og:url" content="' . esc_url( $url ) . '">' . "\n";

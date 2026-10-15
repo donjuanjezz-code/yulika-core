@@ -51,7 +51,9 @@ add_action( 'wp_head', function () {
 						'closes'    => '19:00',
 					),
 				),
-				'sameAs'      => array( 'https://www.instagram.com/yulikaflorist/' ),
+				'hasMap'      => 'https://maps.google.com/?cid=6874201013014114178',
+				'areaServed'  => array( 'Jakarta', 'Bekasi' ),
+				'sameAs'      => array( 'https://www.instagram.com/yulikaflorist/', 'https://www.tiktok.com/@yulikaflorist_', 'https://www.facebook.com/YulikaFlorist/', 'https://maps.google.com/?cid=6874201013014114178' ),
 			),
 		),
 	);
