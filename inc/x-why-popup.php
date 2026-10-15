@@ -40,7 +40,7 @@ add_action( 'wp_footer', function () {
   <p class="ykw-s">Kebun sendiri. Dirangkai sendiri. Dikirim hari&nbsp;ini.</p>
   <ul class="ykw-l">
 	<?php foreach ( $rows as $r ) : ?>
-   <li><svg viewBox="0 0 24 24" aria-hidden="true"><?php echo $ico[ $r[0] ]; // phpcs:ignore ?></svg><span><b><?php echo esc_html( $r[1] ); ?></b> <?php echo esc_html( $r[2] ); ?></span></li>
+   <li><svg viewBox="0 0 24 24" aria-hidden="true"><?php echo $ico[ $r[0] ]; // phpcs:ignore ?></svg><span><b><?php echo esc_html( $r[1] ); ?></b><i><?php echo esc_html( $r[2] ); ?></i></span></li>
 	<?php endforeach; ?>
   </ul>
   <a class="ykw-b" href="<?php echo esc_url( $wa ); ?>" target="_blank" rel="noopener" data-go>Cek Ready Stock via WhatsApp</a>
@@ -78,6 +78,15 @@ add_action( 'wp_footer', function () {
 .ykw .ykw-x{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;font-size:26px!important;line-height:1!important;color:#8a6a4a!important;min-height:0!important;width:36px!important;height:36px!important}
 .ykw .ykw-n{border:1px solid #cdb79c!important;border-radius:26px!important;background:transparent!important;color:#5a4632!important;text-transform:none!important;letter-spacing:0!important;font-weight:500!important;font-size:14px!important;font-family:inherit!important;padding:11px!important;box-shadow:none!important}
 .ykw .ykw-n:hover{background:#f3ebe0!important}
+.ykw h3{letter-spacing:-.01em}
+.ykw-s{font-family:'Sorts Mill Goudy',Georgia,serif;font-style:italic;font-size:16px!important;color:#7a5c3c!important}
+.ykw-l{gap:12px!important}
+.ykw-l li{align-items:flex-start!important}
+.ykw-l li span{display:flex;flex-direction:column;gap:1px}
+.ykw-l b{font-size:14.5px;font-weight:600;letter-spacing:.005em;line-height:1.3}
+.ykw-l i{font-style:normal;font-size:13px;color:#7a6450;line-height:1.35}
+.ykw-l svg{margin-top:1px;width:24px!important;height:24px!important;flex-basis:24px!important}
+@media(max-width:600px){.ykw-l{gap:9px!important}.ykw-l b{font-size:14px}.ykw-l i{font-size:12.5px}.ykw h3{font-size:25px}}
 @media(prefers-reduced-motion:reduce){.ykw-bg,.ykw-box{transition:none}}
 </style>
 <script>
