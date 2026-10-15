@@ -73,6 +73,10 @@ add_action( 'wp_footer', function () {
  .ykw-l{gap:8px;padding-top:12px;margin-bottom:14px}
  .ykw-l li{font-size:13px}
 }
+/* tema menimpa gaya <button>: kunci ulang */
+.ykw .ykw-x{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;font-size:26px!important;line-height:1!important;color:#8a6a4a!important;min-height:0!important;width:36px!important;height:36px!important}
+.ykw .ykw-n{border:1px solid #cdb79c!important;border-radius:26px!important;background:transparent!important;color:#5a4632!important;text-transform:none!important;letter-spacing:0!important;font-weight:500!important;font-size:14px!important;font-family:inherit!important;padding:11px!important;box-shadow:none!important}
+.ykw .ykw-n:hover{background:#f3ebe0!important}
 @media(prefers-reduced-motion:reduce){.ykw-bg,.ykw-box{transition:none}}
 </style>
 <script>
