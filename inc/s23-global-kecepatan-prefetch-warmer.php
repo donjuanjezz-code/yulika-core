@@ -142,3 +142,12 @@ add_filter( 'style_loader_src', function ( $src, $handle ) {
 add_action( 'wp_head', function () {
 	echo '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
 }, 1 );
+/* 15 Okt 2026: CSS Google Fonts dimuat non-blocking (PageSpeed: render-blocking ±1,9 dtk). Teks tampil dulu dengan font cadangan (display=swap). */
+add_filter( 'style_loader_tag', function ( $tag, $handle, $href ) {
+	if ( is_admin() || 0 !== strpos( $handle, 'google-fonts-' ) || false === strpos( $href, 'fonts.googleapis.com' ) ) {
+		return $tag;
+	}
+	$h = esc_url( $href );
+	return '<link rel="preload" as="style" href="' . $h . '" onload="this.onload=null;this.rel=\'stylesheet\'">'
+		. '<noscript><link rel="stylesheet" href="' . $h . '"></noscript>' . "\n";
+}, 20, 3 );
