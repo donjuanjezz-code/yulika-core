@@ -155,26 +155,3 @@ add_action( 'rest_api_init', function () {
 	) );
 } );
 
-/* Sementara (15 Okt): bandingkan HTML versi HP vs desktop untuk menilai aman tidaknya cache HTML di Cloudflare */
-add_action( 'rest_api_init', function () {
-	register_rest_route( 'yk/v1', '/uacmp', array(
-		'methods'             => 'GET',
-		'permission_callback' => function () {
-			return current_user_can( 'manage_options' );
-		},
-		'callback'            => function ( WP_REST_Request $r ) {
-			$u   = home_url( (string) ( $r->get_param( 'p' ) ? $r->get_param( 'p' ) : '/' ) );
-			$u   = add_query_arg( 'ykcmp', time(), $u );
-			$out = array();
-			foreach ( yk_warm_agents() as $k => $a ) {
-				$res = wp_remote_get( $u, array( 'timeout' => 30, 'user-agent' => str_replace( ' YulikaCacheWarmer/2.0', '', $a ) ) );
-				$b   = is_wp_error( $res ) ? '' : wp_remote_retrieve_body( $res );
-				$b   = preg_replace( '/[0-9a-f]{10}/', 'N', $b );
-				$b   = preg_replace( '/ykcmp=\d+/', '', $b );
-				$out[ $k ] = array( 'len' => strlen( $b ), 'md5' => md5( $b ), 'mobile_cls' => substr_count( $b, 'mobile' ) );
-			}
-			$out['same'] = $out['d']['md5'] === $out['m']['md5'];
-			return $out;
-		},
-	) );
-} );
