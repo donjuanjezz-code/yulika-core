@@ -86,6 +86,10 @@ add_action( 'wp_head', function () {
 add_filter( 'get_the_archive_title_prefix', function ( $prefix ) {
 	return is_category() ? '' : $prefix;
 } );
+/* Template arsip Elementor Pro memakai judulnya sendiri ("Category: …") */
+add_filter( 'elementor/utils/get_the_archive_title', function ( $title ) {
+	return is_category() ? single_cat_title( '', false ) : $title;
+} );
 
 /* Judul tab: "Judul Artikel | Yulika Florist" dan "Florist Journal | Yulika Florist" */
 add_filter( 'document_title_parts', function ( $parts ) {
