@@ -82,6 +82,11 @@ add_action( 'wp_head', function () {
 	}
 }, 2 );
 
+/* Judul arsip: "Florist Journal", bukan "Category: Florist Journal" */
+add_filter( 'get_the_archive_title_prefix', function ( $prefix ) {
+	return is_category() ? '' : $prefix;
+} );
+
 /* Judul tab: "Judul Artikel | Yulika Florist" dan "Florist Journal | Yulika Florist" */
 add_filter( 'document_title_parts', function ( $parts ) {
 	if ( is_singular( 'post' ) || is_category() ) {
