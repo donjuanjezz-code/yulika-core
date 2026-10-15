@@ -27,6 +27,14 @@ function yk_imgopt_ids() {
 	return $ids;
 }
 
+/* Paksa kualitas saat alat ini berjalan (plugin lain bisa menimpa kualitas lewat filter) */
+add_filter( 'wp_editor_set_quality', function ( $q ) {
+	return ! empty( $GLOBALS['yk_imgopt_q'] ) ? (int) $GLOBALS['yk_imgopt_q'] : $q;
+}, PHP_INT_MAX );
+add_filter( 'jpeg_quality', function ( $q ) {
+	return ! empty( $GLOBALS['yk_imgopt_q'] ) ? (int) $GLOBALS['yk_imgopt_q'] : $q;
+}, PHP_INT_MAX );
+
 function yk_imgopt_one( $att, $dry ) {
 	$meta = wp_get_attachment_metadata( $att );
 	if ( empty( $meta['file'] ) || empty( $meta['sizes'] ) ) {
@@ -48,6 +56,7 @@ function yk_imgopt_one( $att, $dry ) {
 			continue;
 		}
 		$q      = ( (int) $s['width'] <= 500 ) ? 70 : 76;
+		$GLOBALS['yk_imgopt_q'] = $q;
 		$before = filesize( $f );
 		$after  = $before;
 		$tmp    = $f . '.yktmp.' . ( 'image/webp' === $mime ? 'webp' : 'jpg' );
@@ -82,7 +91,7 @@ function yk_imgopt_one( $att, $dry ) {
 				$r = $ed->save( $wt, 'image/webp' );
 				if ( ! is_wp_error( $r ) && file_exists( $wt ) ) {
 					$n = filesize( $wt );
-					if ( $n < $wb * 0.92 ) {
+					if ( $n < $wb * 0.95 ) {
 						$out['webp_before'] = ( isset( $out['webp_before'] ) ? $out['webp_before'] : 0 ) + ( PHP_INT_MAX === $wb ? 0 : $wb );
 						$out['webp_after']  = ( isset( $out['webp_after'] ) ? $out['webp_after'] : 0 ) + $n;
 						if ( ! $dry ) {
@@ -102,6 +111,7 @@ function yk_imgopt_one( $att, $dry ) {
 			$done[] = $s['file'];
 		}
 	}
+	$GLOBALS['yk_imgopt_q'] = 0;
 	if ( ! $dry ) {
 		update_post_meta( $att, '_yk_imgopt_v1', array_values( array_unique( array_filter( $done ) ) ) );
 	}
@@ -136,6 +146,8 @@ add_action( 'rest_api_init', function () {
 			$tot['next']  = $i;
 			$tot['total'] = count( $ids );
 			$tot['webp']  = wp_image_editor_supports( array( 'mime_type' => 'image/webp' ) );
+			$e = wp_get_image_editor( __FILE__ );
+			$tot['editor'] = _wp_image_editor_choose( array( 'mime_type' => 'image/jpeg' ) );
 			return $tot;
 		},
 	) );
