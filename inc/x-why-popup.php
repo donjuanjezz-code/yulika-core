@@ -25,7 +25,7 @@ add_action( 'wp_footer', function () {
 	);
 	$rows = array(
 		array( 'store', 'Toko fisik di Kelapa Gading', 'ready stock, bisa datang langsung' ),
-		array( 'hand', '100% dirangkai di florist kami', 'we control our quality' ),
+		array( 'hand', 'Semua dirangkai di florist kami', 'we are not a reseller' ),
 		array( 'leaf', 'Kebun sendiri di Puncak', '+ importir bunga langsung' ),
 		array( 'truck', 'Same-day delivery', 'seluruh Jakarta & Bekasi' ),
 		array( 'arch', 'Buket, papan bunga, hingga', 'dekorasi wedding & interior' ),
