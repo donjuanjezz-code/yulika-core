@@ -100,6 +100,27 @@ add_action( 'wp_head', function () {
 	}
 }, 2 );
 
+/* Artikel terjadwal: terbitkan yang sudah lewat jadwal ("Missed schedule").
+   WP-Cron jarang jalan karena halaman dilayani dari cache, jadi cek ringan maksimal tiap 5 menit
+   pada request PHP apa pun (admin, AJAX keranjang, REST, wp-cron). */
+add_action( 'init', function () {
+	if ( get_transient( 'yk_journal_missed_check' ) ) {
+		return;
+	}
+	set_transient( 'yk_journal_missed_check', 1, 5 * MINUTE_IN_SECONDS );
+	$ids = get_posts( array(
+		'post_type'        => 'post',
+		'post_status'      => 'future',
+		'date_query'       => array( array( 'column' => 'post_date_gmt', 'before' => gmdate( 'Y-m-d H:i:s' ), 'inclusive' => true ) ),
+		'fields'           => 'ids',
+		'posts_per_page'   => 10,
+		'suppress_filters' => true,
+	) );
+	foreach ( $ids as $id ) {
+		wp_publish_post( $id );
+	}
+}, 99 );
+
 /* Judul arsip: "Florist Journal", bukan "Category: Florist Journal" */
 add_filter( 'get_the_archive_title_prefix', function ( $prefix ) {
 	return is_category() ? '' : $prefix;
