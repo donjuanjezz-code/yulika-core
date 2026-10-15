@@ -116,7 +116,7 @@ add_action( 'rest_api_init', function () {
 		},
 		'callback'            => function ( WP_REST_Request $r ) {
 			@set_time_limit( 120 );
-			$ids   = yk_imgopt_ids();
+			$ids   = $r->get_param( 'id' ) ? array( (int) $r->get_param( 'id' ) ) : yk_imgopt_ids();
 			$off   = max( 0, (int) $r->get_param( 'offset' ) );
 			$lim   = min( 20, max( 1, (int) ( $r->get_param( 'limit' ) ? $r->get_param( 'limit' ) : 5 ) ) );
 			$dry   = (bool) $r->get_param( 'dry' );
