@@ -58,8 +58,9 @@ add_action('wp_footer', function () {
  function get(){try{return JSON.parse(localStorage.getItem(K)||'{}')||{};}catch(e){return {};}}
  function set(o){try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}}
  var st=get();if(st.until&&st.until>now)return;
+ try{if(sessionStorage.getItem('yk_why_seen'))return;}catch(e){}
  var shown=false;
- function show(){if(shown)return;shown=true;cleanup();m.hidden=false;requestAnimationFrame(function(){m.classList.add('on');});st.until=now+3*864e5;set(st);if(window.gtag)gtag('event','view_promotion',{promotion_name:'welcome_10'});}
+ function show(){if(shown)return;try{if(sessionStorage.getItem('yk_why_seen'))return;}catch(e){}if(document.querySelector('.ykw.on'))return;shown=true;cleanup();m.hidden=false;requestAnimationFrame(function(){m.classList.add('on');});st.until=now+3*864e5;set(st);if(window.gtag)gtag('event','view_promotion',{promotion_name:'welcome_10'});}
  function hide(days){m.classList.remove('on');setTimeout(function(){m.hidden=true;},300);st.until=Date.now()+days*864e5;set(st);}
  [].forEach.call(m.querySelectorAll('[data-x]'),function(b){b.addEventListener('click',function(){hide(7);});});
  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!m.hidden)hide(7);});
