@@ -137,7 +137,8 @@ function yk_lp_html() {
 			$n++;
 			if ( $d['count'] > 0 && ! is_wp_error( $d['link'] ) ) {
 				$img = $d['img'] ? wp_get_attachment_image( $d['img'], 'woocommerce_thumbnail', false, array( 'alt' => $d['name'], 'loading' => $n <= 10 ? 'eager' : 'lazy', 'fetchpriority' => $n <= 3 ? 'high' : 'auto', 'decoding' => $n <= 10 ? 'sync' : 'async', 'sizes' => '(max-width:767px) 50vw, 260px' ) ) : '';
-				$sub = 'budget' === $g[0] ? $d['count'] . ( 1 === (int) $d['count'] ? ' design' : ' designs' ) : 'From Rp' . number_format( $d['min'], 0, '.', ',' );
+				/* 16 Okt 2026: "From Rp…" dihapus atas permintaan pemilik; semua tile menampilkan jumlah desain */
+				$sub = $d['count'] . ( 1 === (int) $d['count'] ? ' design' : ' designs' );
 				echo '<a class="yk-t" href="' . esc_url( $d['link'] ) . '"><span class="yk-ti' . ( $img ? '' : ' yk-empty' ) . '">' . ( $img ? $img : '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="#dcb994"><circle cx="32" cy="16" r="10"/><circle cx="47" cy="27" r="10"/><circle cx="41" cy="45" r="10"/><circle cx="23" cy="45" r="10"/><circle cx="17" cy="27" r="10"/></g><circle cx="32" cy="32" r="8" fill="#a0784a"/></svg>' ) . '</span><span class="yk-tn">' . esc_html( $d['name'] ) . '</span><span class="yk-tp">' . esc_html( $sub ) . '</span></a>'; // phpcs:ignore
 			} else {
 				$msg = 'Hi Yulika Florist, I would like to order: ' . html_entity_decode( $d['name'], ENT_QUOTES, 'UTF-8' );
