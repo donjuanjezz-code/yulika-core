@@ -106,7 +106,7 @@ function yk_lp_html() {
 .yk-lp .yk-ti img{width:100%!important;height:100%!important;object-fit:cover;object-position:center 35%;display:block;margin:0!important;border-radius:0!important}
 .yk-lp .yk-ti.yk-empty{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f6efe6,#ead9c6)}
 .yk-lp .yk-ti.yk-empty svg{width:40%;height:auto;display:block}
-.yk-lp .yk-tn{flex:1;display:flex;align-items:center;justify-content:center;padding:11px 8px 2px;text-align:center;font-weight:700;font-size:16px;line-height:1.3;color:#222}
+.yk-lp .yk-tn{flex:1;display:flex;align-items:center;justify-content:center;padding:12px 8px 13px;text-align:center;font-weight:700;font-size:16px;line-height:1.3;color:#222}
 .yk-lp .yk-tp{display:block;padding:0 8px 13px;text-align:center;font-weight:600;font-size:15px;line-height:1.35;color:#8a5a2b}
 .yk-lp .yk-tp.yk-tpwa{color:#1e8e4e}
 @media(min-width:768px){
@@ -137,9 +137,8 @@ function yk_lp_html() {
 			$n++;
 			if ( $d['count'] > 0 && ! is_wp_error( $d['link'] ) ) {
 				$img = $d['img'] ? wp_get_attachment_image( $d['img'], 'woocommerce_thumbnail', false, array( 'alt' => $d['name'], 'loading' => $n <= 10 ? 'eager' : 'lazy', 'fetchpriority' => $n <= 3 ? 'high' : 'auto', 'decoding' => $n <= 10 ? 'sync' : 'async', 'sizes' => '(max-width:767px) 50vw, 260px' ) ) : '';
-				/* 16 Okt 2026: "From Rp…" dihapus atas permintaan pemilik; semua tile menampilkan jumlah desain */
-				$sub = $d['count'] . ( 1 === (int) $d['count'] ? ' design' : ' designs' );
-				echo '<a class="yk-t" href="' . esc_url( $d['link'] ) . '"><span class="yk-ti' . ( $img ? '' : ' yk-empty' ) . '">' . ( $img ? $img : '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="#dcb994"><circle cx="32" cy="16" r="10"/><circle cx="47" cy="27" r="10"/><circle cx="41" cy="45" r="10"/><circle cx="23" cy="45" r="10"/><circle cx="17" cy="27" r="10"/></g><circle cx="32" cy="32" r="8" fill="#a0784a"/></svg>' ) . '</span><span class="yk-tn">' . esc_html( $d['name'] ) . '</span><span class="yk-tp">' . esc_html( $sub ) . '</span></a>'; // phpcs:ignore
+				/* 16 Okt 2026: tile hanya nama kategori (tanpa harga / jumlah desain), atas permintaan pemilik */
+				echo '<a class="yk-t" href="' . esc_url( $d['link'] ) . '"><span class="yk-ti' . ( $img ? '' : ' yk-empty' ) . '">' . ( $img ? $img : '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="#dcb994"><circle cx="32" cy="16" r="10"/><circle cx="47" cy="27" r="10"/><circle cx="41" cy="45" r="10"/><circle cx="23" cy="45" r="10"/><circle cx="17" cy="27" r="10"/></g><circle cx="32" cy="32" r="8" fill="#a0784a"/></svg>' ) . '</span><span class="yk-tn">' . esc_html( $d['name'] ) . '</span></a>'; // phpcs:ignore
 			} else {
 				$msg = 'Hi Yulika Florist, I would like to order: ' . html_entity_decode( $d['name'], ENT_QUOTES, 'UTF-8' );
 				echo '<a class="yk-t" href="' . esc_attr( $wa . rawurlencode( $msg ) ) . '" target="_blank" rel="noopener"><span class="yk-ti yk-empty"><svg viewBox="0 0 64 64" aria-hidden="true"><g fill="#dcb994"><circle cx="32" cy="16" r="10"/><circle cx="47" cy="27" r="10"/><circle cx="41" cy="45" r="10"/><circle cx="23" cy="45" r="10"/><circle cx="17" cy="27" r="10"/></g><circle cx="32" cy="32" r="8" fill="#a0784a"/></svg></span><span class="yk-tn">' . esc_html( $d['name'] ) . '</span><span class="yk-tp yk-tpwa">Custom order via WhatsApp</span></a>';
