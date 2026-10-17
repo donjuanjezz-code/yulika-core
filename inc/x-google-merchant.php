@@ -9,10 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* 1) Verifikasi Search Console: /googlec8dcffb1208932f1.html */
 add_action( 'init', function () {
 	$path = isset( $_SERVER['REQUEST_URI'] ) ? strtok( (string) $_SERVER['REQUEST_URI'], '?' ) : '';
-	if ( '/googlec8dcffb1208932f1.html' === $path ) {
+	$files = array( 'googlec8dcffb1208932f1.html', 'googlec2372ad2536278ed.html' ); // 1 file per akun Google pemilik
+	$file  = ltrim( $path, '/' );
+	if ( in_array( $file, $files, true ) ) {
 		status_header( 200 );
 		header( 'Content-Type: text/html; charset=UTF-8' );
-		echo 'google-site-verification: googlec8dcffb1208932f1.html';
+		echo 'google-site-verification: ' . $file;
 		exit;
 	}
 }, 0 );
