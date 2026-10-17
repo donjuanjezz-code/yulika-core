@@ -18,7 +18,7 @@ add_action( 'init', function () {
 }, 0 );
 
 /* 2) Merchant listings */
-add_filter( 'woocommerce_structured_data_product_offer', function ( $offer ) {
+function yk_merchant_offer_extras( $offer ) {
 	$offer['hasMerchantReturnPolicy'] = array(
 		'@type'                => 'MerchantReturnPolicy',
 		'applicableCountry'    => 'ID',
@@ -46,4 +46,6 @@ add_filter( 'woocommerce_structured_data_product_offer', function ( $offer ) {
 		),
 	);
 	return $offer;
-}, 20 );
+}
+add_filter( 'yk_product_schema_offer', 'yk_merchant_offer_extras', 20 );            // schema produk custom (inc/s19)
+add_filter( 'woocommerce_structured_data_product_offer', 'yk_merchant_offer_extras', 20 ); // cadangan: schema bawaan WooCommerce

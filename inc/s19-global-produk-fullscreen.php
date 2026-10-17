@@ -143,14 +143,14 @@ add_action( 'template_redirect', function () {
 			'image'       => $full,
 			'sku'         => (string) $p->get_id(),
 			'brand'       => array( '@type' => 'Brand', 'name' => 'Yulika Florist' ),
-			'offers'      => array(
+			'offers'      => apply_filters( 'yk_product_schema_offer', array(
 				'@type'         => 'Offer',
 				'url'           => get_permalink( $p->get_id() ),
 				'priceCurrency' => 'IDR',
 				'price'         => (string) (float) $p->get_price(),
 				'availability'  => 'https://schema.org/InStock',
 				'seller'        => array( '@type' => 'Organization', 'name' => 'Yulika Florist' ),
-			),
+			), $p ),
 		);
 		if ( yk_is_soon( $p ) ) {
 			unset( $ld['offers'] );
