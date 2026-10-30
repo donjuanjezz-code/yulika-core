@@ -2,11 +2,16 @@
 // Dari Code Snippets #36 "#36 Kontak JJ & CS: WA melayang + footer" — scope: global
 
 // #36 Kontak JJ & CS: pilihan di tombol WA melayang + blok kontak di footer (12 Okt 2026)
+// 30 Okt 2026 (Jess): nomor CS lama dihapus; CS sekarang Mia, Yati, Umu.
 function yk_contacts() {
     return array(
         'office' => array('label' => 'Office', 'num' => '021-453-2630', 'tel' => '+62214532630'),
         'jj'     => array('label' => 'JJ', 'num' => '0813-1588-1538', 'wa' => '6281315881538'),
-        'cs'     => array('label' => 'CS', 'num' => '0818-1881-9888', 'wa' => '6281818819888'),
+        'cs'     => array(
+            array('name' => 'Mia',  'num' => '0877-8196-8243', 'wa' => '6287781968243'),
+            array('name' => 'Yati', 'num' => '0877-7776-3020', 'wa' => '6287777763020'),
+            array('name' => 'Umu',  'num' => '0812-8134-5402', 'wa' => '6281281345402'),
+        ),
         'addr'   => 'Jl. Boulevard Raya Blok WA 2 No. 12–14, Kelapa Gading Permai, Jakarta Utara 14240',
         'maps'   => 'https://maps.google.com/?cid=6874201013014114178',
         'hours'  => '08.00–19.00',
@@ -29,7 +34,9 @@ add_action('wp_footer', function () {
 <div class="yk-wa-pick" role="dialog" aria-label="Chat with Yulika Florist">
   <p>Chat with us on WhatsApp</p>
   <a data-wa="<?php echo esc_attr($c['jj']['wa']); ?>" href="https://wa.me/<?php echo esc_attr($c['jj']['wa']); ?>" target="_blank" rel="noopener"><i>JJ</i><span><b>JJ</b><small><?php echo esc_html($c['jj']['num']); ?></small></span></a>
-  <a data-wa="<?php echo esc_attr($c['cs']['wa']); ?>" href="https://wa.me/<?php echo esc_attr($c['cs']['wa']); ?>" target="_blank" rel="noopener"><i>CS</i><span><b>Customer Service</b><small><?php echo esc_html($c['cs']['num']); ?></small></span></a>
+  <?php foreach ($c['cs'] as $cs) : ?>
+  <a data-wa="<?php echo esc_attr($cs['wa']); ?>" href="https://wa.me/<?php echo esc_attr($cs['wa']); ?>" target="_blank" rel="noopener"><i>CS</i><span><b>CS <?php echo esc_html($cs['name']); ?></b><small><?php echo esc_html($cs['num']); ?></small></span></a>
+  <?php endforeach; ?>
 </div>
 <script>(function(){
   var p=document.querySelector('.yk-wa-pick');if(!p)return;
@@ -47,11 +54,15 @@ add_action('wp_footer', function () {
 // 2) Blok kontak di footer semua halaman
 function yk_footer_contact_html() {
     $c = yk_contacts();
-    $wa = function ($k) use ($c) { return '<a href="https://wa.me/' . esc_attr($c[$k]['wa']) . '" target="_blank" rel="noopener"><span class="yk-fc-ic wa">WA</span>' . esc_html($c[$k]['label'] === 'CS' ? 'CS' : 'JJ') . ' · ' . esc_html($c[$k]['num']) . '</a>'; };
+    $wa = function ($label, $num, $wa) { return '<a href="https://wa.me/' . esc_attr($wa) . '" target="_blank" rel="noopener"><span class="yk-fc-ic wa">WA</span>' . esc_html($label) . ' · ' . esc_html($num) . '</a>'; };
+    $cs = '';
+    foreach ($c['cs'] as $p) {
+        $cs .= $wa('CS ' . $p['name'], $p['num'], $p['wa']);
+    }
     return '<section class="yk-fc" aria-label="Contact Yulika Florist">'
         . '<div class="yk-fc-col"><b>Visit Our Store</b><a href="' . esc_url($c['maps']) . '" target="_blank" rel="noopener"><span class="yk-fc-ic">📍</span>' . esc_html($c['addr']) . '</a>'
         . '<span class="yk-fc-row"><span class="yk-fc-ic">🕗</span>Opening hours ' . esc_html($c['hours']) . '</span></div>'
-        . '<div class="yk-fc-col"><b>Contact Us</b><a href="tel:' . esc_attr($c['office']['tel']) . '"><span class="yk-fc-ic">📞</span>Office · ' . esc_html($c['office']['num']) . '</a>' . $wa('jj') . $wa('cs') . '</div>'
+        . '<div class="yk-fc-col"><b>Contact Us</b><a href="tel:' . esc_attr($c['office']['tel']) . '"><span class="yk-fc-ic">📞</span>Office · ' . esc_html($c['office']['num']) . '</a>' . $wa('JJ', $c['jj']['num'], $c['jj']['wa']) . $cs . '</div>'
         . '</section>';
 }
 add_action('elementor/theme/after_do_footer', function () { echo yk_footer_contact_html(); });
