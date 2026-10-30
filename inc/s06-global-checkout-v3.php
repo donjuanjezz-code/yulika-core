@@ -434,8 +434,23 @@ add_filter( 'woocommerce_shipping_package_name', function () {
 } );
 
 add_filter( 'woocommerce_cart_needs_shipping_address', function ( $needs ) {
+	if ( ! empty( $GLOBALS['yk_render_ship_form'] ) ) {
+		return $needs; // saat merender form checkout: field penerima selalu dibuat (JS menyembunyikannya saat Pickup)
+	}
 	return 'pickup' === yk_method_get() ? false : $needs;
 } );
+
+/*
+ * Fix 30 Okt 2026: kalau sesi terakhir = Pickup, form penerima (nama, WA, alamat, peta) tidak dirender,
+ * sehingga pembeli yang pindah ke Delivery tanpa reload tidak bisa mengisi alamat.
+ * Form sekarang selalu dirender; validasi tetap mengikuti metode (Pickup = tanpa alamat).
+ */
+add_action( 'woocommerce_checkout_shipping', function () {
+	$GLOBALS['yk_render_ship_form'] = true;
+}, 1 );
+add_action( 'woocommerce_checkout_shipping', function () {
+	$GLOBALS['yk_render_ship_form'] = false;
+}, 99 );
 
 add_filter( 'woocommerce_no_shipping_available_html', 'yk_no_ship_html' );
 add_filter( 'woocommerce_cart_no_shipping_available_html', 'yk_no_ship_html' );
@@ -871,8 +886,8 @@ add_action( 'admin_init', function () {
  * CSS + JS
  * ======================================================= */
 add_action( 'wp_enqueue_scripts', function () {
-	if ( ! function_exists( 'is_checkout' ) || ! is_checkout() || is_wc_endpoint_url( 'order-received' ) ) {
-		return;
+	if ( ! function_exists( 'is_checkout' ) || ! is_checkout() || is_wc_endpoint_url( 'order-received' ) || is_wc_endpoint_url( 'order-pay' ) ) {
+		return; // order-pay (popup Midtrans) tidak punya peta: jangan muat Google Maps (error "ykGInit is not a function")
 	}
 	$gkey       = trim( (string) get_option( 'yk_gmaps_key', '' ) );
 	$use_google = '' !== $gkey;
@@ -956,7 +971,7 @@ if(box){
  $(document).on('change','input[name="yk_method"]',function(){mode(false)});
  mode(true);
 }
-if(!document.getElementById('yk-map'))return;
+if(!document.getElementById('yk-map')){window.ykGInit=function(){};return;}
 var STORE={lat:-6.158,lng:106.905};
 function km(a,b){var R=6371,dl=(b.lat-a.lat)*Math.PI/180,dg=(b.lng-a.lng)*Math.PI/180;var x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dg/2)*Math.sin(dg/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function comps(list){var o={kel:'',kec:'',city:'',prov:''};(list||[]).forEach(function(c){var t=c.types||[],n=c.longText||c.long_name||'';if(!n)return;
