@@ -140,7 +140,7 @@ function yk_lp_html() {
 				/* 16 Okt 2026: tile hanya nama kategori (tanpa harga / jumlah desain), atas permintaan pemilik */
 				echo '<a class="yk-t" href="' . esc_url( $d['link'] ) . '"><span class="yk-ti' . ( $img ? '' : ' yk-empty' ) . '">' . ( $img ? $img : '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="#dcb994"><circle cx="32" cy="16" r="10"/><circle cx="47" cy="27" r="10"/><circle cx="41" cy="45" r="10"/><circle cx="23" cy="45" r="10"/><circle cx="17" cy="27" r="10"/></g><circle cx="32" cy="32" r="8" fill="#a0784a"/></svg>' ) . '</span><span class="yk-tn">' . esc_html( $d['name'] ) . '</span></a>'; // phpcs:ignore
 			} else {
-				$msg = function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin memesan *' . html_entity_decode( $d['name'], ENT_QUOTES, 'UTF-8' ) . '*' ) : 'Halo Yulika Florist';
+				$msg = function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin memesan *' . html_entity_decode( $d['name'], ENT_QUOTES, 'UTF-8' ) . '*' ) : 'Halo Admin';
 				echo '<a class="yk-t" href="' . esc_attr( $wa . rawurlencode( $msg ) ) . '" target="_blank" rel="noopener"><span class="yk-ti yk-empty"><svg viewBox="0 0 64 64" aria-hidden="true"><g fill="#dcb994"><circle cx="32" cy="16" r="10"/><circle cx="47" cy="27" r="10"/><circle cx="41" cy="45" r="10"/><circle cx="23" cy="45" r="10"/><circle cx="17" cy="27" r="10"/></g><circle cx="32" cy="32" r="8" fill="#a0784a"/></svg></span><span class="yk-tn">' . esc_html( $d['name'] ) . '</span><span class="yk-tp yk-tpwa">Custom order via WhatsApp</span></a>';
 			}
 		}

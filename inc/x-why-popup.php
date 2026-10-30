@@ -14,7 +14,7 @@ add_action( 'wp_footer', function () {
 	if ( ! $entry ) {
 		return;
 	}
-	$wa  = 'https://wa.me/6281315881538?text=' . rawurlencode( function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin menanyakan bunga yang ready stock hari ini' ) : 'Halo Yulika Florist' );
+	$wa  = 'https://wa.me/6281315881538?text=' . rawurlencode( function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin menanyakan bunga yang ready stock hari ini' ) : 'Halo Admin' );
 	$ico = array(
 		'store' => '<path d="M3 9.5 4.5 4h15L21 9.5M3 9.5h18M3 9.5c0 1.4 1.1 2.5 2.5 2.5S8 10.9 8 9.5c0 1.4 1.1 2.5 2.5 2.5S13 10.9 13 9.5c0 1.4 1.1 2.5 2.5 2.5S18 10.9 18 9.5c0 1.4 1.1 2.5 2.5 2.5M5 12v8h14v-8M10 20v-5h4v5"/>',
 		'leaf'  => '<path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15M5 19l7-7"/>',

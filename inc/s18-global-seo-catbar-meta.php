@@ -246,7 +246,7 @@ add_action( 'elementor/frontend/widget/before_render', function ( $w ) {
 		echo '<div class="yk-cat-intro"><p>' . wp_kses( $intro, array( 'em' => array() ) ) . '</p></div>';
 	}
 	if ( $cnt < 1 ) {
-		$msg = ( function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin memesan *' . $name . '*' ) : 'Halo Yulika Florist' ) . "\nAcara & ucapan: ...\nTanggal & area kirim: ...";
+		$msg = function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin memesan *' . $name . '*', '', "Acara & ucapan: ...\nTanggal & area kirim: ..." ) : 'Halo Admin';
 		echo '<div class="yk-co-panel"><b>Made to order</b>Tell us the occasion, the message and the delivery time — our florist will send you design options and prices on WhatsApp during opening hours.<br><a href="' . esc_attr( 'https://wa.me/6281315881538?text=' . rawurlencode( $msg ) ) . '" target="_blank" rel="noopener">Order ' . esc_html( $name ) . ' via WhatsApp</a></div>';
 		echo '<script>document.body.classList.add("yk-co-empty")</script>';
 	}

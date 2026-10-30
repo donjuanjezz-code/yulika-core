@@ -6,7 +6,7 @@ add_action( 'wp_footer', function () {
 		return;
 	}
 	// 30 Okt 2026: pesan standar "baru saja mengunjungi website" (x-wa-pesan.php); di halaman produk menyebut produknya
-	$msg = function_exists( 'yk_wa_default_text' ) ? yk_wa_default_text() : 'Halo Yulika Florist, saya baru saja mengunjungi website yulikaflorist.com dan ingin bertanya lebih lanjut mengenai produknya. Bisa dibantu?';
+	$msg = function_exists( 'yk_wa_default_text' ) ? yk_wa_default_text() : 'Halo Admin, saya baru saja cek web yulikaflorist.com dan ingin bertanya lebih lanjut mengenai produknya, boleh dibantu?';
 	$url = 'https://wa.me/6281315881538?text=' . rawurlencode( $msg );
 	?>
 <style>
