@@ -478,7 +478,7 @@ function yk_zone_info_html() {
 	if ( isset( $fees[ $zone ] ) ) {
 		$in = '<span class="ok">&#10003; Delivery area: <strong>' . esc_html( $z['label'] ? $z['label'] : 'Jakarta' ) . '</strong> &middot; Zone ' . $zone . ' &middot; ' . wc_price( $fees[ $zone ] ) . '</span>';
 	} elseif ( 4 === $zone ) {
-		$in = '<span class="no">Sorry, ' . esc_html( $z['label'] ? $z['label'] : 'this address' ) . ' is outside our delivery area (estimated travel time over 90 minutes). <a href="' . esc_url( yk_wa_link( function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin mengirim bunga ke alamat di luar area pengiriman' ) : 'Halo Admin' ) ) . '" target="_blank" rel="noopener">Chat with us on WhatsApp</a> for a special arrangement.</span>';
+		$in = '<span class="no">Sorry, ' . esc_html( $z['label'] ? $z['label'] : 'this address' ) . ' is outside our delivery area (estimated travel time over 90 minutes). <a href="' . esc_attr( yk_wa_link( function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin mengirim bunga ke alamat di luar area pengiriman' ) : 'Halo Admin' ) ) . '" target="_blank" rel="noopener">Chat with us on WhatsApp</a> for a special arrangement.</span>';
 	}
 	return '<div id="yk-zone-info">' . $in . '</div>';
 }
@@ -633,7 +633,7 @@ add_action( 'woocommerce_checkout_after_customer_details', function () {
 		echo '<label class="yk-slot yk-pslot"><input type="radio" name="yk_slot" value="' . esc_attr( $k ) . '" disabled><span>' . esc_html( $s[2] ) . '</span></label>';
 	}
 	echo '</div></div>';
-	echo '<p class="yk-hint">Every arrangement is made fresh and needs about 4 working hours (our florists work 08:00–19:00 daily). Orders placed outside working hours are prepared the next day. Earliest available: <strong>' . esc_html( yk_dlv_date_label( $ready->format( 'Y-m-d' ) ) . ', ' . $ready->format( 'H:i' ) ) . '</strong>. Need it sooner? <a href="' . esc_url( $wa ) . '" target="_blank" rel="noopener">Chat with us on WhatsApp</a>.</p>';
+	echo '<p class="yk-hint">Every arrangement is made fresh and needs about 4 working hours (our florists work 08:00–19:00 daily). Orders placed outside working hours are prepared the next day. Earliest available: <strong>' . esc_html( yk_dlv_date_label( $ready->format( 'Y-m-d' ) ) . ', ' . $ready->format( 'H:i' ) ) . '</strong>. Need it sooner? <a href="' . esc_attr( $wa ) . '" target="_blank" rel="noopener">Chat with us on WhatsApp</a>.</p>';
 	echo '</div>';
 } );
 
@@ -651,7 +651,7 @@ add_action( 'woocommerce_checkout_process', function () {
 	} elseif ( empty( $z['pin'] ) && 0 === (int) $z['zone'] ) {
 		wc_add_notice( 'Please choose the <strong>recipient address</strong> from the suggestions or pin it on the map.', 'error' );
 	} elseif ( 4 === (int) $z['zone'] ) {
-		wc_add_notice( 'Sorry, the recipient address is <strong>outside our delivery area</strong>. Please <a href="' . esc_url( yk_wa_link( function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin mengirim bunga ke alamat di luar area pengiriman' ) : 'Halo Admin' ) ) . '" target="_blank" rel="noopener">chat with us on WhatsApp</a> for a special arrangement.', 'error' );
+		wc_add_notice( 'Sorry, the recipient address is <strong>outside our delivery area</strong>. Please <a href="' . esc_attr( yk_wa_link( function_exists( 'yk_wa_text' ) ? yk_wa_text( 'ingin mengirim bunga ke alamat di luar area pengiriman' ) : 'Halo Admin' ) ) . '" target="_blank" rel="noopener">chat with us on WhatsApp</a> for a special arrangement.', 'error' );
 	} elseif ( 0 === (int) $z['zone'] ) {
 		wc_add_notice( 'We could not determine the delivery zone for this address. Please move the pin to the exact location.', 'error' );
 	}

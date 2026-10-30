@@ -43,7 +43,7 @@ add_action( 'wp_footer', function () {
    <li><svg viewBox="0 0 24 24" aria-hidden="true"><?php echo $ico[ $r[0] ]; // phpcs:ignore ?></svg><span><b><?php echo esc_html( $r[1] ); ?></b><i><?php echo esc_html( $r[2] ); ?></i></span></li>
 	<?php endforeach; ?>
   </ul>
-  <a class="ykw-b" href="<?php echo esc_url( $wa ); ?>" target="_blank" rel="noopener" data-go>Cek Ready Stock via WhatsApp</a>
+  <a class="ykw-b" href="<?php echo esc_attr( $wa ); ?>" target="_blank" rel="noopener" data-go>Cek Ready Stock via WhatsApp</a>
   <button class="ykw-n" type="button" data-x>Lihat koleksi online</button>
   <a class="ykw-m" href="<?php echo esc_url( home_url( '/welcome/' ) ); ?>">Member baru? Diskon 10% pesanan pertama →</a>
  </div>
