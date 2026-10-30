@@ -5,10 +5,8 @@ add_action( 'wp_footer', function () {
 	if ( is_admin() ) {
 		return;
 	}
-	$msg = 'Halo Yulika Florist, saya mau order URGENT / dadakan. Bisa dibantu hari ini?';
-	if ( function_exists( 'is_product' ) && is_product() ) {
-		$msg = 'Halo Yulika Florist, saya tertarik dengan ' . wp_strip_all_tags( get_the_title() ) . ' (' . get_permalink() . ')';
-	}
+	// 30 Okt 2026: pesan standar "baru saja mengunjungi website" (x-wa-pesan.php); di halaman produk menyebut produknya
+	$msg = function_exists( 'yk_wa_default_text' ) ? yk_wa_default_text() : 'Halo Yulika Florist, saya baru saja mengunjungi website yulikaflorist.com dan ingin bertanya lebih lanjut mengenai produknya. Bisa dibantu?';
 	$url = 'https://wa.me/6281315881538?text=' . rawurlencode( $msg );
 	?>
 <style>
