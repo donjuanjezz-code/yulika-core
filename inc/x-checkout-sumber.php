@@ -382,7 +382,7 @@ function bad(){var b=box();if(!b)return '';var c=b.querySelector('input[name="yk
 function flag(k){var b=box();if(!b)return;b.classList.add('yk-src-err');var m=b.querySelector('.yk-src-msg');if(m)m.textContent=k==='other'?'Please tell us where you found us.':'Please choose one option.';
  try{b.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){b.scrollIntoView();}
  if(k==='other'){var o=b.querySelector('input[name="yk_src_other"]');if(o)setTimeout(function(){try{o.focus({preventScroll:true});}catch(e){o.focus();}},350);}}
-function ok(){var b=box();if(b&&!bad())b.classList.remove('yk-src-err');}
+function ok(){var b=box();if(!b)return;var k=bad();if(!k){b.classList.remove('yk-src-err');return;}if(b.classList.contains('yk-src-err')){var m=b.querySelector('.yk-src-msg');if(m)m.textContent=k==='other'?'Please tell us where you found us.':'Please choose one option.';}}
 document.addEventListener('change',function(e){var t=e.target;if(!t||t.name!=='yk_src')return;st.v=t.value;sync();ok();},true);
 document.addEventListener('input',function(e){var t=e.target;if(!t||t.name!=='yk_src_other')return;st.o=t.value;ok();},true);
 // Place Order tanpa jawaban: tahan di browser (tanpa kirim ke server), tandai kotaknya
