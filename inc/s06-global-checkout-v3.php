@@ -834,6 +834,10 @@ function yk_order_wa_text( $order, $to = 'shop' ) {
 	if ( 'shop' === $to ) {
 		$L[] = '';
 		$L[] = 'Sender: ' . $name . ( $order->get_billing_phone() ? ' (' . $order->get_billing_phone() . ')' : '' );
+		$src = function_exists( 'yk_src_label' ) ? yk_src_label( $order, 'en' ) : ''; // survey checkout (x-checkout-sumber.php)
+		if ( '' !== $src ) {
+			$L[] = 'Found us via: ' . $src;
+		}
 		$L[] = 'Please confirm my order. Thank you!';
 	} else {
 		$L[] = '';
