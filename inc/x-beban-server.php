@@ -30,35 +30,21 @@ add_action( 'init', function () {
 	}
 }, 1 );
 
-/* 3) Cart fragments hanya untuk keranjang berisi */
-add_action( 'wp_footer', function () {
-	if ( is_admin() || ! function_exists( 'is_cart' ) || is_cart() || is_checkout() ) {
-		return;
+/* 3) Cart fragments hanya untuk keranjang berisi.
+   Script tetap di-enqueue (WooCommerce tetap menulis wc_cart_fragments_params), hanya tag <script src>
+   miliknya diganti pemuat kecil: file baru diunduh & dijalankan kalau cookie keranjang ada. */
+add_filter( 'script_loader_tag', function ( $tag, $handle, $src ) {
+	if ( 'wc-cart-fragments' !== $handle || is_admin() || ! $src ) {
+		return $tag;
 	}
-	$h  = 'wc-cart-fragments';
-	$ws = wp_scripts();
-	if ( empty( $ws->registered[ $h ] ) || ! wp_script_is( $h, 'enqueued' ) || wp_script_is( $h, 'done' ) ) {
-		return;
+	if ( function_exists( 'is_cart' ) && ( is_cart() || is_checkout() ) ) {
+		return $tag;
 	}
-	$s   = $ws->registered[ $h ];
-	$src = (string) $s->src;
-	if ( '' === $src ) {
-		return;
-	}
-	if ( ! preg_match( '#^(https?:)?//#', $src ) ) {
-		$src = $ws->base_url . $src;
-	}
-	if ( $s->ver ) {
-		$src = add_query_arg( 'ver', $s->ver, $src );
-	}
-	$data = (string) $ws->get_data( $h, 'data' );
-	foreach ( (array) $s->deps as $d ) {
-		wp_enqueue_script( $d ); // jquery & js-cookie tetap dimuat seperti biasa
-	}
-	wp_dequeue_script( $h );
-	echo '<script data-no-optimize="1" data-no-defer="1" data-cfasync="false">' . $data . "\n"
+	$lazy = '<script id="wc-cart-fragments-js" data-no-optimize="1" data-no-defer="1" data-cfasync="false">'
 		. '(function(){if(!/(?:^|;\s*)woocommerce_items_in_cart=1/.test(document.cookie))return;'
 		. 'var n=0,src=' . wp_json_encode( $src ) . ';'
 		. '(function w(){if(window.jQuery&&(window.Cookies||n>50)){var s=document.createElement("script");s.src=src;document.body.appendChild(s);return;}'
 		. 'if(++n<150)setTimeout(w,100);})();})();</script>' . "\n";
-}, 1 );
+	$out = preg_replace( '#<script\b[^>]*\bsrc=(["\'])[^"\']*cart-fragments[^"\']*\1[^>]*>\s*</script>\s*#i', $lazy, $tag, 1, $count );
+	return ( $count && $out ) ? $out : $tag;
+}, 20, 3 );
