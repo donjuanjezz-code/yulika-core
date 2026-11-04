@@ -13,9 +13,13 @@ add_filter( 'wp_speculation_rules_href_exclude_paths', function ( $paths ) {
 	return array_merge( (array) $paths, array( '/checkout/*', '/cart/*', '/my-account/*', '/welcome/*', '/favorit/*', '/cari/*' ) );
 } );
 
-/* 2) Pemanas cache: tiap 15 menit membuka halaman yang belum ter-cache, supaya pengunjung selalu dapat versi cache.
-   15 Okt: LiteSpeed menyimpan cache terpisah untuk HP dan desktop (Vary: User-Agent), jadi dipanaskan dua-duanya.
-   Daftar dirotasi penuh (sebelumnya hanya 10 URL pertama yang pernah dipanaskan). Produk "coming-soon" dilewati. */
+/* 2) Pemanas cache: membuka halaman yang belum ter-cache, supaya pengunjung selalu dapat versi cache.
+   Daftar dirotasi penuh. Produk "coming-soon" dilewati.
+   4 Nov 2026 (analisa beban server, OK Jess): diperkecil karena warmer = ±33% request Yulika dan ikut memicu
+   CPU/RAM fault di akun cPanel bersama Allesscia.
+   - tiap 30 menit (sebelumnya 10 menit), maks 25 URL & 25 detik per putaran (sebelumnya 80 URL & 40 detik);
+   - hanya UA desktop: setting LiteSpeed "Cache Mobile" = OFF, jadi HP & desktop memakai cache yang sama;
+   - berhenti sendiri kalau satu halaman butuh > 4 detik (tanda server sedang berat). */
 function yk_warm_lists() {
 	$prio  = array( home_url( '/' ), home_url( '/custom-order/' ), home_url( '/our-story/' ), home_url( '/faq/' ), home_url( '/category/florist-journal/' ) );
 	$terms = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => true ) );
@@ -51,13 +55,13 @@ function yk_warm_urls() {
 }
 function yk_warm_agents() {
 	return array(
-		'd' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36 YulikaCacheWarmer/2.0',
-		'm' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1 YulikaCacheWarmer/2.0',
+		'd' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36 YulikaCacheWarmer/2.1',
 	);
 }
 
-/* Beranda (HP + desktop) dicek tiap putaran; sisanya bergiliran. Berhenti saat waktu habis supaya server tidak berat. */
-function yk_warm_run( $budget = 40, $max = 80 ) {
+/* Beranda dicek tiap putaran; sisanya bergiliran. Berhenti saat waktu habis, jumlah maksimal tercapai,
+   atau satu halaman lebih lambat dari $slow detik (server sedang berat → jangan ditambah beban). */
+function yk_warm_run( $budget = 25, $max = 25, $slow = 4 ) {
 	@set_time_limit( $budget + 30 );
 	$all   = yk_warm_urls();
 	$ua    = yk_warm_agents();
@@ -67,13 +71,15 @@ function yk_warm_run( $budget = 40, $max = 80 ) {
 			$jobs[] = array( $u, $k );
 		}
 	}
-	$start = time();
-	$done  = 0;
-	$hit   = 0;
-	$miss  = 0;
-	$err   = 0;
-	$get   = function ( $u, $k ) use ( &$hit, &$miss, &$err, $ua ) {
-		$r = wp_remote_get( $u, array( 'timeout' => 25, 'redirection' => 0, 'user-agent' => $ua[ $k ], 'headers' => array( 'Accept-Encoding' => 'gzip' ) ) );
+	$start   = time();
+	$done    = 0;
+	$hit     = 0;
+	$miss    = 0;
+	$err     = 0;
+	$stopped = '';
+	$get     = function ( $u, $k ) use ( &$hit, &$miss, &$err, $ua ) {
+		$t = microtime( true );
+		$r = wp_remote_get( $u, array( 'timeout' => 10, 'redirection' => 0, 'user-agent' => $ua[ $k ], 'headers' => array( 'Accept-Encoding' => 'gzip' ) ) );
 		if ( is_wp_error( $r ) ) {
 			$err++;
 		} elseif ( 'hit' === strtolower( (string) wp_remote_retrieve_header( $r, 'x-litespeed-cache' ) ) ) {
@@ -81,35 +87,48 @@ function yk_warm_run( $budget = 40, $max = 80 ) {
 		} else {
 			$miss++;
 		}
+		return microtime( true ) - $t;
 	};
 	foreach ( array_keys( $ua ) as $k ) {
-		$get( home_url( '/' ), $k );
+		$dt = $get( home_url( '/' ), $k );
 		$done++;
+		if ( $dt > $slow ) {
+			$stopped = 'lambat';
+		}
 	}
 	$n   = count( $jobs );
 	$pos = $n ? (int) get_option( 'yk_warm_pos', 0 ) % $n : 0;
 	$i   = 0;
-	while ( $n && $done < $max && $i < $n && ( time() - $start ) < $budget ) {
+	while ( ! $stopped && $n && $done < $max && $i < $n && ( time() - $start ) < $budget ) {
 		list( $u, $k ) = $jobs[ ( $pos + $i ) % $n ];
-		$get( $u, $k );
+		$dt = $get( $u, $k );
 		$i++;
 		$done++;
+		if ( $dt > $slow ) {
+			$stopped = 'lambat';
+		}
 	}
 	if ( $n ) {
 		update_option( 'yk_warm_pos', ( $pos + $i ) % $n, false );
 	}
-	$stat = array( 'time' => current_time( 'mysql' ), 'checked' => $done, 'hit' => $hit, 'warmed' => $miss, 'error' => $err, 'jobs' => $n, 'pos' => ( $pos + $i ) % max( 1, $n ), 'seconds' => time() - $start );
+	$stat = array( 'time' => current_time( 'mysql' ), 'checked' => $done, 'hit' => $hit, 'warmed' => $miss, 'error' => $err, 'jobs' => $n, 'pos' => ( $pos + $i ) % max( 1, $n ), 'seconds' => time() - $start, 'stopped' => $stopped );
 	update_option( 'yk_warm_last', $stat, false );
 	return $stat;
 }
 
 add_filter( 'cron_schedules', function ( $s ) {
-	$s['yk_10min'] = array( 'interval' => 600, 'display' => 'Every 10 minutes (Yulika)' );
+	$s['yk_10min'] = array( 'interval' => 600, 'display' => 'Every 10 minutes (Yulika)' ); // lama, dibiarkan agar event lama tidak yatim
+	$s['yk_30min'] = array( 'interval' => 1800, 'display' => 'Every 30 minutes (Yulika)' );
 	return $s;
 } );
 add_action( 'init', function () {
-	if ( ! wp_next_scheduled( 'yk_cache_warm' ) ) {
-		wp_schedule_event( time() + 120, 'yk_10min', 'yk_cache_warm' );
+	$next = wp_next_scheduled( 'yk_cache_warm' );
+	if ( $next && 'yk_30min' !== wp_get_schedule( 'yk_cache_warm' ) ) {
+		wp_clear_scheduled_hook( 'yk_cache_warm' ); // pindah dari jadwal 10 menit ke 30 menit
+		$next = false;
+	}
+	if ( ! $next ) {
+		wp_schedule_event( time() + 300, 'yk_30min', 'yk_cache_warm' );
 	}
 } );
 add_action( 'yk_cache_warm', function () {
@@ -125,9 +144,17 @@ add_action( 'rest_api_init', function () {
 		},
 		'callback'            => function ( WP_REST_Request $r ) {
 			if ( $r->get_param( 'run' ) ) {
-				return yk_warm_run( 40, (int) ( $r->get_param( 'max' ) ? $r->get_param( 'max' ) : 80 ) );
+				return yk_warm_run( 25, min( 80, (int) ( $r->get_param( 'max' ) ? $r->get_param( 'max' ) : 25 ) ) );
 			}
-			return array( 'last' => get_option( 'yk_warm_last' ), 'next' => wp_next_scheduled( 'yk_cache_warm' ), 'urls' => count( yk_warm_urls() ) );
+			return array(
+				'last'        => get_option( 'yk_warm_last' ),
+				'next'        => wp_next_scheduled( 'yk_cache_warm' ),
+				'schedule'    => wp_get_schedule( 'yk_cache_warm' ),
+				'urls'        => count( yk_warm_urls() ),
+				'cron_last'   => (int) get_option( 'yk_cron_last', 0 ),
+				'now'         => time(),
+				'wp_cron_off' => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
+			);
 		},
 	) );
 } );
