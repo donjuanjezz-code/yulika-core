@@ -4,7 +4,10 @@
  * Analisa lengkap: project doc claude/hosting-analisa-beban-2026-11-04.md
  *
  * 1) WP-Cron tidak lagi dipicu oleh pengunjung. Cron dijalankan oleh cron cPanel tiap 5 menit:
- *      wget -q -O /dev/null -t 1 -T 120 "https://yulikaflorist.com/wp-cron.php?doing_wp_cron"
+ *      wget -q -O /dev/null -t 1 -T 120 "https://yulikaflorist.com/wp-cron.php?yk=$(date +\%s)" >/dev/null 2>&1
+ *    Parameter yk=<waktu> wajib: Cloudflare men-cache URL wp-cron.php yang sama (cache rule HTML), jadi tanpa
+ *    parameter unik request ke-2 dst. dijawab dari cache dan tidak sampai server. Jangan pakai doing_wp_cron=<nilai>
+ *    (wp-cron.php akan keluar tanpa menjalankan apa pun karena lock tidak cocok).
  *    Konstanta didefinisikan di sini (bukan di wp-config.php) supaya bisa dibatalkan cukup lewat repo.
  *    Kalau cron cPanel dihapus, HAPUS juga bagian ini, kalau tidak jadwal WordPress berhenti.
  * 2) Jejak cron: option yk_cron_last = waktu terakhir wp-cron.php jalan (dicek lewat /wp-json/yk/v1/warm).
