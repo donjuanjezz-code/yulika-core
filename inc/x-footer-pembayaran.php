@@ -2,7 +2,9 @@
 // Logo metode pembayaran di footer (di atas baris copyright). Dipasang oleh Claude 30 Okt 2026.
 // Logo memakai file resmi bawaan plugin Midtrans & WooCommerce yang sudah ada di server (tanpa upload media).
 // Daftar mengikuti metode yang aktif: Midtrans Snap (QRIS, GoPay, VA Mandiri/BNI/Permata/CIMB + bank lain via
-// ATM Bersama/PRIMA/ALTO), transfer manual BCA, dan PayPal (USD). BRI VA sedang nonaktif di Snap → tidak ditampilkan.
+// ATM Bersama/PRIMA/ALTO), transfer manual BCA, dan PayPal (USD).
+// 4 Nov 2026: + VA BSI & SeaBank (baru aktif di Midtrans). Plugin Midtrans tidak punya file logonya → tampil sebagai
+// teks nama bank (yk_pay_txt). BRI VA sengaja nonaktif di Snap (keputusan Jess) → jangan ditambahkan.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -22,6 +24,11 @@ function yk_pay_img( $rel, $alt, $nw, $nh, $h = 20 ) {
 	);
 }
 
+/* Nama bank sebagai teks (untuk metode tanpa file logo di plugin). */
+function yk_pay_txt( $label, $color ) {
+	return sprintf( '<span class="yk-pay-t" style="color:%s">%s</span>', esc_attr( $color ), esc_html( $label ) );
+}
+
 function yk_pay_footer_html() {
 	$mt = 'midtrans-woocommerce/public/images/payment-methods/';
 	$wc = 'woocommerce/assets/images/';
@@ -36,6 +43,8 @@ function yk_pay_footer_html() {
 			array( yk_pay_img( $mt . 'bni_va.png', 'BNI', 155, 50 ) ),
 			array( yk_pay_img( $mt . 'permata_va.png', 'PermataBank', 155, 50 ) ),
 			array( yk_pay_img( $mt . 'cimb_clicks.png', 'CIMB Niaga', 155, 50 ) ),
+			array( yk_pay_txt( 'BSI', '#00A39D' ) ),
+			array( yk_pay_txt( 'SeaBank', '#EE4D2D' ) ),
 			array(
 				yk_pay_img( $mt . 'other_va_2.png', 'ATM Bersama', 80, 80, 18 ),
 				yk_pay_img( $mt . 'other_va_1.png', 'PRIMA', 80, 80, 18 ),
@@ -111,6 +120,7 @@ add_action( 'wp_head', function () {
 		. '.yk-pay-row li::before,.yk-pay-row li::marker{content:none!important}'
 		. '.yk-pay-row img{display:block;width:auto!important;height:20px!important;max-width:84px;object-fit:contain;margin:0!important;border:0!important;box-shadow:none!important}'
 		. '.yk-pay-row li.yk-pay-multi img{height:18px!important}'
+		. '.yk-pay-t{font:800 13px/1 Montserrat,Arial,sans-serif;letter-spacing:.01em;white-space:nowrap}'
 		. '.yk-pay-note{max-width:780px;margin:12px auto 0!important;font-size:11.5px;line-height:1.55;color:#6B5A4E}'
 		. '@media (max-width:767px){'
 		. '.yk-pay{padding:14px 12px 2px}'
@@ -118,6 +128,7 @@ add_action( 'wp_head', function () {
 		. '.yk-pay-row li{height:30px;padding:0 8px;gap:4px}'
 		. '.yk-pay-row img{height:17px!important;max-width:70px}'
 		. '.yk-pay-row li.yk-pay-multi img{height:16px!important}'
+		. '.yk-pay-t{font-size:12px}'
 		. '}'
 		. '</style>' . "\n";
 }, 99 );
