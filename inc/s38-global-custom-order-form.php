@@ -80,6 +80,8 @@ function yk_co_submit() {
 	update_post_meta($pid, '_yk_imgs', $urls);
 	$msg = yk_co_message($pid, $d, $urls);
 	update_post_meta($pid, '_yk_msg', $msg);
+	// 5 Nov 2026: ikut tercatat di wp-admin → Kontak WA (x-wa-lead.php)
+	if (function_exists('yk_wl_add')) yk_wl_add(array('hp' => $d['wa'], 'nama' => $d['name'], 'tipe' => 'co', 'ke' => YK_CO_WA, 'btn' => 'Form custom order', 'item' => 'CO-' . $pid . ' ' . $d['occ'] . ' – ' . $d['type'], 'page' => '/custom-order'));
 	@wp_mail(get_option('admin_email'), 'Custom Order CO-' . $pid . ' – ' . $d['name'], $msg);
 	wp_send_json_success(array('id' => $pid, 'wa' => 'https://wa.me/' . YK_CO_WA . '?text=' . rawurlencode($msg)));
 }
@@ -241,6 +243,7 @@ f.addEventListener('submit',function(e){e.preventDefault();if(busy)return;err.te
  .then(function(r){return r.json();}).then(function(j){
   if(!j||!j.success)throw new Error((j&&j.data&&j.data.m)||'Something went wrong.');
   try{var s=JSON.parse(localStorage.getItem('yk_ck_v1')||'{}')||{};s.s={n:nm.value.trim(),p:wa.value.trim()};localStorage.setItem('yk_ck_v1',JSON.stringify(s));}catch(x){}
+  try{if(window.ykWl)ykWl.remember(nm.value,wa.value);}catch(x){}
   var d=document.querySelector('.ykco-done');d.querySelector('.ykco-ref').textContent='CO-'+j.data.id;d.querySelector('.ykco-walink').href=j.data.wa;
   f.style.display='none';d.style.display='block';d.scrollIntoView({block:'center'});
   if(window.gtag)gtag('event','generate_lead',{form:'custom_order'});
