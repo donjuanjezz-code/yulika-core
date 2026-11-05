@@ -1,0 +1,433 @@
+
+/* ---------- Kontak WA wajib Nama depan + No. WhatsApp (5 Nov 2026, permintaan Jess) ----------
+ * Klik link WhatsApp mana pun di web (tombol melayang, halaman/kartu produk, sales, footer, Product Inquiry)
+ * → popup Nama depan + No. WhatsApp (wajib, centang promo opsional) → dicatat ke {prefix}ac_wa_lead → WhatsApp terbuka.
+ * Pesan WA ditambah nama ("saya Rina dari website"); kode #W, log Klik WhatsApp & konversi Google Ads tetap jalan
+ * (terhitung saat WhatsApp benar-benar dibuka). Data tersimpan di browser (localStorage ac_wl, 180 hari) → klik berikutnya
+ * tidak ditanya lagi, tetap tercatat. Laporan & export CSV: wp-admin → Kontak WA.
+ * Staff yang login (admin bar) tidak ditanya; tes: ?acwa=1 (data ditandai staff), ?acwa=reset hapus data di browser.
+ */
+define( 'AC_WL_DBV', '1' );
+
+function ac_wl_table() {
+	global $wpdb;
+	return $wpdb->prefix . 'ac_wa_lead';
+}
+
+function ac_wl_install() {
+	if ( AC_WL_DBV === get_option( 'ac_wl_dbv' ) ) {
+		return;
+	}
+	global $wpdb;
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( 'CREATE TABLE ' . ac_wl_table() . " (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		t datetime NOT NULL,
+		hp varchar(20) NOT NULL DEFAULT '',
+		nama varchar(60) NOT NULL DEFAULT '',
+		promo tinyint(1) NOT NULL DEFAULT 0,
+		tipe varchar(10) NOT NULL DEFAULT '',
+		ke varchar(20) NOT NULL DEFAULT '',
+		btn varchar(40) NOT NULL DEFAULT '',
+		item varchar(150) NOT NULL DEFAULT '',
+		page varchar(190) NOT NULL DEFAULT '',
+		src varchar(60) NOT NULL DEFAULT '',
+		lp varchar(190) NOT NULL DEFAULT '',
+		dev varchar(10) NOT NULL DEFAULT '',
+		kode varchar(8) NOT NULL DEFAULT '',
+		staff tinyint(1) NOT NULL DEFAULT 0,
+		PRIMARY KEY  (id),
+		KEY hp (hp),
+		KEY t (t)
+	) " . $wpdb->get_charset_collate() . ';' );
+	update_option( 'ac_wl_dbv', AC_WL_DBV, false );
+}
+add_action( 'admin_init', 'ac_wl_install' );
+
+/* Nomor → format internasional tanpa +, mis. 0812-3456-7890 → 6281234567890. Kosong kalau tidak valid. */
+function ac_wl_hp( $v ) {
+	$v    = trim( (string) $v );
+	$plus = 0 === strpos( $v, '+' );
+	$d    = preg_replace( '/\D/', '', $v );
+	if ( 0 === strpos( $d, '00' ) ) {
+		$d = substr( $d, 2 );
+	} elseif ( ! $plus && 0 === strpos( $d, '0' ) ) {
+		$d = '62' . substr( $d, 1 );
+	} elseif ( ! $plus && 0 === strpos( $d, '8' ) ) {
+		$d = '62' . $d;
+	}
+	if ( 0 === strpos( $d, '620' ) ) {
+		$d = '62' . substr( $d, 3 );
+	}
+	if ( strlen( $d ) < 9 || strlen( $d ) > 15 ) {
+		return '';
+	}
+	if ( 0 === strpos( $d, '62' ) && ! preg_match( '/^628\d{7,11}$/', $d ) ) {
+		return '';
+	}
+	return $d;
+}
+
+function ac_wl_nama( $v ) {
+	$v = sanitize_text_field( (string) $v );
+	$v = preg_replace( '/[\d<>"@#$%^*_=+{}\[\]|\\\\\/;:~`]+/u', '', $v );
+	$v = trim( preg_replace( '/\s+/u', ' ', $v ) );
+	$v = mb_substr( $v, 0, 40 );
+	if ( mb_strlen( $v ) < 2 ) {
+		return '';
+	}
+	return mb_strtoupper( mb_substr( $v, 0, 1 ) ) . mb_substr( $v, 1 );
+}
+
+/* Simpan satu kontak. Dipakai popup (AJAX) dan form custom order (s38). */
+function ac_wl_add( array $d ) {
+	$hp   = ac_wl_hp( isset( $d['hp'] ) ? $d['hp'] : '' );
+	$nama = ac_wl_nama( isset( $d['nama'] ) ? $d['nama'] : '' );
+	if ( '' === $hp || '' === $nama ) {
+		return false;
+	}
+	ac_wl_install();
+	$s = function ( $k, $len ) use ( $d ) {
+		return isset( $d[ $k ] ) ? mb_substr( sanitize_text_field( (string) $d[ $k ] ), 0, $len ) : '';
+	};
+	global $wpdb;
+	return (bool) $wpdb->insert(
+		ac_wl_table(),
+		array(
+			't'     => current_time( 'mysql' ),
+			'hp'    => $hp,
+			'nama'  => $nama,
+			'promo' => empty( $d['promo'] ) ? 0 : 1,
+			'tipe'  => $s( 'tipe', 10 ),
+			'ke'    => preg_replace( '/\D/', '', $s( 'ke', 20 ) ),
+			'btn'   => $s( 'btn', 40 ),
+			'item'  => $s( 'item', 150 ),
+			'page'  => $s( 'page', 190 ),
+			'src'   => $s( 'src', 60 ),
+			'lp'    => $s( 'lp', 190 ),
+			'dev'   => $s( 'dev', 10 ),
+			'kode'  => strtoupper( preg_replace( '/[^A-Za-z0-9]/', '', $s( 'kode', 8 ) ) ),
+			'staff' => is_user_logged_in() ? 1 : 0,
+		)
+	);
+}
+
+function ac_wl_ajax() {
+	$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : ''; // phpcs:ignore
+	$p  = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.NonceVerification -- endpoint publik (halaman di-cache), dibatasi rate limit.
+	$tp = isset( $p['tipe'] ) ? (string) $p['tipe'] : '';
+	if ( '' === $ua || preg_match( '/bot|crawl|spider|slurp|headless|lighthouse|facebookexternalhit/i', $ua )
+		|| ! empty( $p['web'] ) || ! in_array( $tp, array( 'form', 'klik' ), true )
+		|| ( 'form' === $tp && isset( $p['ms'] ) && (int) $p['ms'] < 250 ) ) {
+		status_header( 204 );
+		exit;
+	}
+	$ip = isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? (string) $_SERVER['HTTP_CF_CONNECTING_IP'] : ( isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '' ); // phpcs:ignore
+	$rk = 'ac_wl_rl_' . md5( $ip );
+	$n  = (int) get_transient( $rk );
+	if ( $n >= 20 ) {
+		status_header( 204 );
+		exit;
+	}
+	set_transient( $rk, $n + 1, 10 * MINUTE_IN_SECONDS );
+	ac_wl_add( array_intersect_key( (array) $p, array_flip( array( 'hp', 'nama', 'promo', 'tipe', 'ke', 'btn', 'item', 'page', 'src', 'lp', 'dev', 'kode' ) ) ) );
+	status_header( 204 );
+	exit;
+}
+add_action( 'wp_ajax_ac_wl', 'ac_wl_ajax' );
+add_action( 'wp_ajax_nopriv_ac_wl', 'ac_wl_ajax' );
+
+/* ---------- Popup (semua halaman depan) ---------- */
+add_action( 'wp_head', function () {
+	if ( is_admin() ) {
+		return;
+	}
+	$cfg = array(
+		'aj' => admin_url( 'admin-ajax.php' ),
+	);
+	echo '<script id="ac-wl" data-no-optimize="1" data-no-defer="1" data-cfasync="false">(function(){var C=' . wp_json_encode( $cfg ) . ';' . <<<'JS'
+var K='ac_wl',SEL='a[href*="wa.me/"],a[href*="api.whatsapp.com"],a[href*="whatsapp.com/send"]',
+SKIP='[data-wa-keep],#wpadminbar',q=location.search,pass=0,pend=null,M=null,cb=null,t0=0,back=null,lastK='';
+if(/[?&]acwa=reset/.test(q)){try{localStorage.removeItem(K)}catch(e){}}
+var force=/[?&]acwa=/.test(q);
+function src(){var S=null;try{S=JSON.parse(sessionStorage.getItem('ac_src')||'null')}catch(e){}return S||{s:'',lp:''}}
+function staff(){return !force&&!!document.getElementById('wpadminbar')}
+function get(){try{var o=JSON.parse(localStorage.getItem(K)||'null');if(o&&o.hp&&o.n&&Date.now()-(o.t||0)<15552e6)return o}catch(e){}return null}
+function put(o){o.t=Date.now();try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}}
+function norm(v){v=String(v||'').trim();var plus=v.charAt(0)==='+',d=v.replace(/\D/g,'');
+if(d.indexOf('00')===0)d=d.slice(2);else if(!plus&&d.charAt(0)==='0')d='62'+d.slice(1);else if(!plus&&d.charAt(0)==='8')d='62'+d;
+if(d.indexOf('620')===0)d='62'+d.slice(3);
+if(d.length<9||d.length>15)return '';if(d.indexOf('62')===0&&!/^628\d{7,11}$/.test(d))return '';return d}
+function nm(v){v=String(v||'').replace(/[\d<>"@#$%^*_=+{}\[\]|\\\/;:~`]+/g,'').replace(/\s+/g,' ').trim().slice(0,40);return v.length>=2?v.charAt(0).toUpperCase()+v.slice(1):''}
+function first(v){return String(v||'').trim().split(/\s+/)[0]||''}
+function pers(a,n){try{var u=new URL(a.href),t=u.searchParams.get('text')||'Halo Allesscia, saya dari website. Boleh minta price list & stok terbaru?';
+if(t.indexOf('aya '+n+' dari website')<0)t=t.replace(/\b([Ss])aya dari website/,function(m,s){return s+'aya '+n+' dari website'});
+var x=[];u.searchParams.forEach(function(v,k){if(k!=='text')x.push(encodeURIComponent(k)+'='+encodeURIComponent(v))});x.push('text='+encodeURIComponent(t));
+a.href=u.origin+u.pathname+'?'+x.join('&')+u.hash}catch(e){}}
+function kode(a){try{var m=(new URL(a.href).searchParams.get('text')||'').match(/\(#(W[0-9A-Z]{4})\)\s*$/);return m?m[1]:''}catch(e){return ''}}
+function btn(a){if(a.closest('.ac-float'))return 'Tombol melayang';if(a.id==='ac-wa')return 'Halaman produk';if(a.closest('.ac-card'))return 'Kartu produk';if(a.classList.contains('ac-ig-wa'))return 'Post Instagram';if(a.closest('.ac-artcta'))return 'Artikel blog';if(a.closest('.ac-team'))return 'Kontak sales';if(a.closest('.ac-stores'))return 'Toko Bali';if(a.closest('#daftar-produk'))return 'Daftar produk';if(a.closest('header'))return 'Header';if(a.closest('footer'))return 'Footer';if(a.closest('.ac-contact'))return 'Blok kontak';if(a.closest('.ac-page-head'))return 'Halaman area';return 'Lainnya'}
+function item(a){if(a.id==='ac-wa'){var on=document.querySelector('.ac-thumbs button.on');return (a.dataset.n||'')+(on&&on.dataset.w?' ('+on.dataset.w+')':'')}
+var c=a.closest('.ac-card');if(c){var h=c.querySelector('h3');return h?h.textContent.trim():''}
+if(a.closest('.ac-artcta')){var t=document.querySelector('h1');return t?'Artikel: '+t.textContent.trim():''}
+if(a.closest('.ac-team')){var b=a.querySelector('b');return b?'Sales: '+b.textContent.trim():''}
+return ''}
+function send(o){var S=src();o.action='ac_wl';o.src=S.s;o.lp=S.lp;o.page=location.pathname;o.dev=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'HP':'Desktop';
+var f=new FormData(),k;for(k in o)f.append(k,o[k]==null?'':String(o[k]).slice(0,190));
+try{if(navigator.sendBeacon&&navigator.sendBeacon(C.aj,f))return}catch(e){}
+try{fetch(C.aj,{method:'POST',body:f,keepalive:true,credentials:'same-origin'})}catch(e){}}
+function lead(a,me,tipe,x){var u=null;try{u=new URL(a.href)}catch(e){}
+var o={hp:me.hp,nama:me.n,promo:me.p?1:0,tipe:tipe,ke:u?((u.pathname.match(/\d{8,}/)||[''])[0]||u.searchParams.get('phone')||''):'',btn:btn(a),item:item(a),kode:kode(a)},k;
+for(k in x||{})o[k]=x[k];send(o)}
+function flush(){if(!pend)return;var p=pend;pend=null;lead(p.a,p.me,'klik')}
+var IC='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 6.9L3 29l6.5-2c1.9 1.1 4.2 1.7 6.5 1.7 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-2.1 0-4.1-.6-5.8-1.7l-.4-.3-3.9 1.2 1.3-3.7-.3-.4c-1.2-1.8-1.8-3.8-1.8-5.9C5.1 9.9 10 5.2 16 5.2s10.9 4.7 10.9 10.6S22 26.4 16 26.4zm6-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.9 8.9 0 0 1-4.4-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.1 1.1-1.1 2.7 1.2 3.1 1.3 3.3 2.3 3.5 5.6 4.9c2.1.9 2.9.9 3.9.8.6-.1 1.9-.8 2.2-1.5s.3-1.4.2-1.5-.3-.2-.6-.3z"/></svg>';
+var CSS='.acwl{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center;font-family:var(--sans,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif);-webkit-font-smoothing:antialiased}'
++'.acwl[hidden]{display:none!important}'
++'.acwl-bg{position:absolute;inset:0;background:rgba(31,36,32,.55);opacity:0;transition:opacity .2s}.acwl.on .acwl-bg{opacity:1}'
++'.acwl-box{position:relative;box-sizing:border-box;width:100%;max-width:420px;margin:0;background:#fff;border-radius:22px 22px 0 0;padding:22px 20px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 40px rgba(20,30,22,.25);transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .2s;max-height:94vh;overflow:auto;color:#1f2420;text-align:left}'
++'.acwl.on .acwl-box{transform:none}'
++'@media(min-width:600px){.acwl{align-items:center;padding:16px}.acwl-box{border-radius:22px;padding:26px 26px 20px;opacity:0;transform:translateY(14px) scale(.98)}.acwl.on .acwl-box{opacity:1}}'
++'.acwl-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border:0;background:#f7f3ec;border-radius:50%;color:#2e4a34;font:400 22px/36px Arial,sans-serif;padding:0;margin:0;cursor:pointer;text-align:center}'
++'.acwl-ic{width:46px;height:46px;border-radius:50%;background:#1f8a4c;display:flex;align-items:center;justify-content:center;margin:0 0 12px}.acwl-ic svg{width:26px;height:26px;fill:#fff}'
++'.acwl-h{margin:0 0 6px;padding:0 44px 0 0;font:600 28px/1.15 var(--serif,"Cormorant Garamond",Georgia,serif);color:#1f2420}'
++'.acwl-sub{margin:0 0 16px;font-size:14px;line-height:1.5;color:#5d655e}'
++'.acwl-l{display:block;margin:0 0 12px;font-size:13px;font-weight:600;line-height:1.3;color:#1f2420}'
++'.acwl .acwl-in{display:block;box-sizing:border-box;width:100%;height:48px;margin:6px 0 0;padding:0 14px;border:1.5px solid #e6dfd2;border-radius:12px;background:#fff;font:500 16px/1.2 var(--sans,system-ui,sans-serif);color:#1f2420;box-shadow:none;outline:0;-webkit-appearance:none;appearance:none}'
++'.acwl .acwl-in:focus{border-color:#2e4a34;box-shadow:0 0 0 3px rgba(46,74,52,.15)}.acwl .acwl-in.bad{border-color:#a3262c}'
++'.acwl-ck{display:flex;gap:10px;align-items:flex-start;margin:2px 0 14px;font-size:13.5px;line-height:1.45;color:#1f2420;cursor:pointer;font-weight:500}'
++'.acwl .acwl-ck input{width:18px;height:18px;margin:1px 0 0;padding:0;flex:0 0 18px;accent-color:#1f8a4c}'
++'.acwl .acwl-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}'
++'.acwl-err{margin:-4px 0 12px;font-size:13px;line-height:1.4;color:#a3262c}'
++'.acwl .acwl-go{display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;width:100%;height:52px;margin:0;border:0;border-radius:999px;background:#1f8a4c;color:#fff;font:600 16px/1 var(--sans,system-ui,sans-serif);cursor:pointer;padding:0 20px;box-shadow:0 4px 14px rgba(31,138,76,.28)}'
++'.acwl .acwl-go:hover{background:#18733f}.acwl .acwl-go:active{transform:scale(.985)}.acwl-go svg{width:20px;height:20px;fill:#fff;flex:0 0 20px}'
++'.acwl-note{margin:10px 0 0;font-size:12px;line-height:1.45;color:#5d655e;text-align:center}'
++'html.acwl-lock,html.acwl-lock body{overflow:hidden!important}';
+function build(){if(M)return M;var st=document.createElement('style');st.id='acwl-css';st.textContent=CSS;document.head.appendChild(st);
+M=document.createElement('div');M.className='acwl';M.hidden=true;
+M.innerHTML='<div class="acwl-bg" data-x></div><form class="acwl-box" role="dialog" aria-modal="true" aria-labelledby="acwl-h" novalidate>'
++'<button type="button" class="acwl-x" aria-label="Tutup" data-x>&times;</button><div class="acwl-ic">'+IC+'</div>'
++'<p class="acwl-h" id="acwl-h">Chat dengan Allesscia</p><p class="acwl-sub">Isi nama depan &amp; nomor WhatsApp Anda supaya tim kami bisa membalas lebih cepat.</p>'
++'<label class="acwl-l">Nama depan<input class="acwl-in" name="n" autocomplete="given-name" autocapitalize="words" maxlength="40" placeholder="Contoh: Rina"></label>'
++'<label class="acwl-l">Nomor WhatsApp<input class="acwl-in" name="p" type="tel" inputmode="tel" autocomplete="tel" maxlength="22" placeholder="0812 3456 7890"></label>'
++'<label class="acwl-ck"><input type="checkbox" name="o"><span>Kirimi saya info stok baru, price list &amp; promo via WhatsApp</span></label>'
++'<input class="acwl-hp" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">'
++'<p class="acwl-err" role="alert" hidden></p><button type="submit" class="acwl-go">'+IC+'<span>Lanjut ke WhatsApp</span></button>'
++'<p class="acwl-note">Nomor Anda hanya dipakai untuk membalas chat, dan untuk info promo jika dicentang.</p></form>';
+document.body.appendChild(M);var f=M.querySelector('form'),err=M.querySelector('.acwl-err');
+M.addEventListener('click',function(e){if(e.target.closest('[data-x]'))close()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!M.hidden)close()});
+[f.n,f.p].forEach(function(i){i.addEventListener('input',function(){i.classList.remove('bad');err.hidden=true})});
+f.addEventListener('submit',function(e){e.preventDefault();var n=nm(f.n.value),p=norm(f.p.value);
+f.n.classList.toggle('bad',!n);f.p.classList.toggle('bad',!p);
+if(!n||!p){err.textContent=!n?'Isi nama depan Anda dulu.':'Nomor WhatsApp belum benar. Contoh: 0812 3456 7890.';err.hidden=false;(!n?f.n:f.p).focus();return}
+var me={n:n,hp:p,p:f.o.checked?1:0},x={ms:Date.now()-t0,web:f.web.value};put(me);var c=cb;cb=null;close(1);if(c)c(me,x)});
+return M}
+function open(fn,pre){build();var f=M.querySelector('form'),tm={};try{tm=JSON.parse(localStorage.getItem('ac_tanya_me')||'{}')||{}}catch(e){}
+f.n.value=first(pre&&pre.n||tm.nama||'');f.p.value='';f.o.checked=false;f.web.value='';
+f.n.classList.remove('bad');f.p.classList.remove('bad');M.querySelector('.acwl-err').hidden=true;
+cb=fn;back=document.activeElement;t0=Date.now();M.hidden=false;document.documentElement.classList.add('acwl-lock');
+requestAnimationFrame(function(){requestAnimationFrame(function(){M.classList.add('on')})});
+if(window.matchMedia&&matchMedia('(pointer:fine)').matches)setTimeout(function(){(f.n.value?f.p:f.n).focus()},60)}
+function close(ok){if(!M||M.hidden)return;if(!ok)cb=null;M.classList.remove('on');document.documentElement.classList.remove('acwl-lock');
+setTimeout(function(){M.hidden=true},220);if(!ok&&back&&back.focus)try{back.focus()}catch(e){}}
+function go(a,me,x){pers(a,me.n);pass=1;try{a.click()}finally{pass=0}lead(a,me,'form',x)}
+window.addEventListener('click',function(e){if(pass)return;var a=e.target&&e.target.closest&&e.target.closest(SEL);
+if(!a||a.closest(SKIP)||staff())return;var me=get();
+if(me){pers(a,me.n);pend={a:a,me:me};setTimeout(flush,0);return}
+e.preventDefault();e.stopImmediatePropagation();e.stopPropagation();open(function(me,x){go(a,me,x)})},true);
+window.addEventListener('click',flush,false);
+/* Product Inquiry (form → window.open WA): minta nomor dulu, lalu kirim ulang form */
+function wrap(){var o=window.acWaTrack;if(typeof o!=='function'||o.__wl)return;var w=function(x){var c=o(x);lastK=c;return c};w.__wl=1;window.acWaTrack=w}
+function pi(f,me,tipe,k0,x){var o={hp:me.hp,nama:me.n,promo:me.p?1:0,tipe:tipe,ke:f.ke?f.ke.value:'',btn:'Product Inquiry',item:document.querySelectorAll('.ac-tq-list > li').length+' produk',kode:lastK!==k0?lastK:''},k;for(k in x||{})o[k]=x[k];send(o)}
+window.addEventListener('submit',function(e){var f=e.target;if(pass||!f||!f.matches||!f.matches('.ac-tq-form')||staff())return;wrap();var me=get(),k0=lastK;
+if(me){setTimeout(function(){if(lastK!==k0)pi(f,me,'klik',k0)},0);return}
+e.preventDefault();e.stopImmediatePropagation();e.stopPropagation();
+open(function(me,x){var k1=lastK;pass=1;try{if(f.requestSubmit)f.requestSubmit();else f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}))}finally{pass=0}pi(f,me,'form',k1,x)},{n:f.nama&&f.nama.value})},true);
+window.acWl={get:get,open:open};
+JS
+	. '})();</script>' . "\n";
+}, 2 );
+
+/* ---------- Laporan wp-admin: Kontak WA ---------- */
+function ac_wl_names() {
+	return function_exists( 'ac_wa_names' ) ? ac_wa_names() : array();
+}
+
+/* 6281234567890 → 0812-3456-7890 (nomor luar negeri: +kode…) */
+function ac_wl_fmt( $hp ) {
+	if ( 0 !== strpos( $hp, '62' ) ) {
+		return '+' . $hp;
+	}
+	$l = '0' . substr( $hp, 2 );
+	return substr( $l, 0, 4 ) . '-' . substr( $l, 4, 4 ) . '-' . substr( $l, 8 );
+}
+
+/* Filter dari URL: d = hari (0 = semua), q = cari nama/nomor, promo = 1, staff = 1 (ikutkan tes staff) */
+function ac_wl_filters() {
+	$g = function ( $k ) {
+		return isset( $_GET[ $k ] ) ? sanitize_text_field( wp_unslash( $_GET[ $k ] ) ) : ''; // phpcs:ignore
+	};
+	return array(
+		'd'     => '' === $g( 'd' ) ? 0 : max( 0, min( 3650, (int) $g( 'd' ) ) ),
+		'q'     => mb_substr( $g( 'q' ), 0, 60 ),
+		'promo' => '1' === $g( 'promo' ),
+		'staff' => '1' === $g( 'staff' ),
+	);
+}
+
+/* Query kontak per nomor. Mengembalikan array( rows, total ). */
+function ac_wl_rows( $f, $limit = 200, $offset = 0 ) {
+	global $wpdb;
+	$tb    = ac_wl_table();
+	$where = $f['staff'] ? '1=1' : 'staff = 0';
+	if ( '' !== $f['q'] ) {
+		$like  = '%' . $wpdb->esc_like( $f['q'] ) . '%';
+		$dig   = preg_replace( '/\D/', '', $f['q'] );
+		$dlike = '' !== $dig ? '%' . $wpdb->esc_like( 0 === strpos( $dig, '0' ) ? substr( $dig, 1 ) : $dig ) . '%' : $like;
+		$where .= $wpdb->prepare( " AND hp IN (SELECT hp FROM $tb WHERE nama LIKE %s OR hp LIKE %s)", $like, $dlike ); // phpcs:ignore
+	}
+	$having = array();
+	if ( $f['d'] ) {
+		$having[] = $wpdb->prepare( 'MAX(t) >= %s', wp_date( 'Y-m-d H:i:s', time() - $f['d'] * DAY_IN_SECONDS ) );
+	}
+	if ( $f['promo'] ) {
+		$having[] = 'MAX(promo) = 1';
+	}
+	$hv  = $having ? ' HAVING ' . implode( ' AND ', $having ) : '';
+	$sel = "SELECT hp,
+		SUBSTRING_INDEX(GROUP_CONCAT(nama ORDER BY id DESC SEPARATOR '\\n'), '\\n', 1) AS nama,
+		MIN(t) AS t1, MAX(t) AS t2, COUNT(*) AS n, MAX(promo) AS promo,
+		SUBSTRING_INDEX(GROUP_CONCAT(ke ORDER BY id DESC SEPARATOR '\\n'), '\\n', 1) AS ke,
+		SUBSTRING_INDEX(GROUP_CONCAT(btn ORDER BY id DESC SEPARATOR '\\n'), '\\n', 1) AS btn,
+		SUBSTRING_INDEX(GROUP_CONCAT(IF(item <> '', item, page) ORDER BY id DESC SEPARATOR '\\n'), '\\n', 1) AS lastp,
+		SUBSTRING_INDEX(GROUP_CONCAT(src ORDER BY id ASC SEPARATOR '\\n'), '\\n', 1) AS src
+		FROM $tb WHERE $where GROUP BY hp $hv";
+	$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM ($sel) x" ); // phpcs:ignore
+	$rows  = $wpdb->get_results( $sel . ' ORDER BY t2 DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset ); // phpcs:ignore
+	return array( $rows, $total );
+}
+
+add_action( 'admin_menu', function () {
+	add_menu_page( 'Kontak WA', 'Kontak WA', 'edit_others_posts', 'ac-kontak-wa', 'ac_wl_page', 'dashicons-whatsapp', 27 );
+} );
+
+/* Export CSV (sebelum header admin dikirim) */
+add_action( 'admin_init', function () {
+	if ( empty( $_GET['page'] ) || 'ac-kontak-wa' !== $_GET['page'] || empty( $_GET['csv'] ) ) { // phpcs:ignore
+		return;
+	}
+	if ( ! current_user_can( 'edit_others_posts' ) || ! wp_verify_nonce( isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '', 'ac_wl_csv' ) ) {
+		wp_die( 'Tidak diizinkan.' );
+	}
+	list( $rows ) = ac_wl_rows( ac_wl_filters(), 100000, 0 );
+	$names        = ac_wl_names();
+	nocache_headers();
+	header( 'Content-Type: text/csv; charset=utf-8' );
+	header( 'Content-Disposition: attachment; filename=kontak-wa-allesscia-' . wp_date( 'Ymd-Hi' ) . '.csv' );
+	$out = fopen( 'php://output', 'w' );
+	fwrite( $out, "\xEF\xBB\xBF" ); // phpcs:ignore -- BOM agar Excel membaca UTF-8
+	fputcsv( $out, array( 'Nama', 'No WhatsApp', 'No HP', 'Mau promo', 'Pertama kontak', 'Terakhir kontak', 'Jumlah chat', 'Terakhir ke', 'Tombol terakhir', 'Produk / halaman terakhir', 'Sumber awal' ) );
+	foreach ( $rows as $r ) {
+		fputcsv(
+			$out,
+			array(
+				$r->nama,
+				$r->hp,
+				ac_wl_fmt( $r->hp ),
+				$r->promo ? 'Ya' : 'Tidak',
+				mysql2date( 'd/m/Y H:i', $r->t1 ),
+				mysql2date( 'd/m/Y H:i', $r->t2 ),
+				(int) $r->n,
+				isset( $names[ $r->ke ] ) ? $names[ $r->ke ] : $r->ke,
+				$r->btn,
+				$r->lastp,
+				$r->src,
+			)
+		);
+	}
+	fclose( $out ); // phpcs:ignore
+	exit;
+} );
+
+function ac_wl_page() {
+	global $wpdb;
+	ac_wl_install();
+	$tb    = ac_wl_table();
+	$f     = ac_wl_filters();
+	$names = ac_wl_names();
+	$base  = admin_url( 'admin.php?page=yk-kontak-wa' );
+	$keep  = function ( $over = array() ) use ( $f, $base ) {
+		$a = array_merge(
+			array(
+				'd'     => $f['d'],
+				'q'     => $f['q'],
+				'promo' => $f['promo'] ? 1 : '',
+				'staff' => $f['staff'] ? 1 : '',
+			),
+			$over
+		);
+		return add_query_arg( array_filter( $a, function ( $v ) { return '' !== $v && null !== $v; } ), $base );
+	};
+	$from  = $f['d'] ? wp_date( 'Y-m-d H:i:s', time() - $f['d'] * DAY_IN_SECONDS ) : '2000-01-01 00:00:00';
+	$sw    = $f['staff'] ? '1=1' : 'staff = 0';
+
+	echo '<div class="wrap"><h1>Kontak WA</h1>';
+	echo '<style>.acwla-kpi{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0}.acwla-kpi div{background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:10px 16px;min-width:150px}.acwla-kpi b{display:block;font-size:24px;margin-top:4px}.acwla-f a{margin-right:4px}.acwla-f a.cur{font-weight:700;text-decoration:none;color:#1d2327}.acwla-t td,.acwla-t th{vertical-align:middle}.acwla-t .wa{display:inline-block;background:#25d366;color:#fff;border-radius:4px;padding:1px 7px;font-size:11px;text-decoration:none;margin-left:6px}.acwla-y{color:#138a47;font-weight:600}</style>';
+	echo '<p style="max-width:860px">Pembeli yang klik WhatsApp di website wajib mengisi nama depan &amp; nomor WhatsApp (mulai 5 Nov 2026). Satu baris = satu nomor. Kode #W menghubungkan kontak dengan chat di WhatsApp dan laporan <a href="' . esc_url( admin_url( 'admin.php?page=ac-wa-klik' ) ) . '">Klik WhatsApp</a>.</p>';
+
+	// Riwayat satu nomor
+	if ( ! empty( $_GET['hp'] ) ) { // phpcs:ignore
+		$hp   = preg_replace( '/\D/', '', wp_unslash( $_GET['hp'] ) ); // phpcs:ignore
+		$hist = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $tb WHERE hp = %s ORDER BY id DESC LIMIT 200", $hp ) ); // phpcs:ignore
+		echo '<p><a href="' . esc_url( $keep() ) . '">&larr; Semua kontak</a></p><h2>' . esc_html( ac_wl_fmt( $hp ) ) . ' <a class="button" target="_blank" rel="noopener" href="https://wa.me/' . esc_attr( $hp ) . '">Chat WhatsApp</a></h2>';
+		echo '<table class="widefat striped acwla-t"><thead><tr><th>Waktu</th><th>Nama</th><th>Cara</th><th>Ke</th><th>Tombol</th><th>Produk / item</th><th>Halaman</th><th>Sumber</th><th>Perangkat</th><th>Kode</th><th>Promo</th></tr></thead><tbody>';
+		foreach ( $hist as $r ) {
+			echo '<tr><td>' . esc_html( mysql2date( 'd M Y H:i', $r->t ) ) . '</td><td>' . esc_html( $r->nama ) . ( $r->staff ? ' <em>(tes staff)</em>' : '' ) . '</td><td>' . esc_html( 'form' === $r->tipe ? 'Isi form' : ( 'co' === $r->tipe ? 'Form' : 'Otomatis (sudah pernah isi)' ) ) . '</td><td>' . esc_html( isset( $names[ $r->ke ] ) ? $names[ $r->ke ] : $r->ke ) . '</td><td>' . esc_html( $r->btn ) . '</td><td>' . esc_html( $r->item ) . '</td><td>' . esc_html( $r->page ) . '</td><td>' . esc_html( $r->src ) . '</td><td>' . esc_html( $r->dev ) . '</td><td>' . ( $r->kode ? '<a href="' . esc_url( admin_url( 'admin.php?page=ac-wa-klik&kode=' . $r->kode ) ) . '">#' . esc_html( $r->kode ) . '</a>' : '–' ) . '</td><td>' . ( $r->promo ? '<span class="acwla-y">Ya</span>' : '–' ) . '</td></tr>';
+		}
+		echo '</tbody></table></div>';
+		return;
+	}
+
+	$uniq  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(DISTINCT hp) FROM $tb WHERE $sw AND t >= %s", $from ) ); // phpcs:ignore
+	$baru  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM (SELECT hp FROM $tb WHERE $sw GROUP BY hp HAVING MIN(t) >= %s) x", $from ) ); // phpcs:ignore
+	$promo = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM (SELECT hp FROM $tb WHERE $sw GROUP BY hp HAVING MAX(promo) = 1 AND MAX(t) >= %s) x", $from ) ); // phpcs:ignore
+	$chat  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $tb WHERE $sw AND t >= %s", $from ) ); // phpcs:ignore
+	echo '<div class="acwla-kpi"><div>Kontak (nomor unik)<b>' . (int) $uniq . '</b></div><div>Kontak baru<b>' . (int) $baru . '</b></div><div>Mau promo WA<b>' . (int) $promo . '</b></div><div>Total klik chat WA<b>' . (int) $chat . '</b></div></div>';
+
+	echo '<p class="acwla-f">Periode: ';
+	foreach ( array( 1 => 'Hari ini (24 jam)', 7 => '7 hari', 30 => '30 hari', 90 => '90 hari', 0 => 'Semua' ) as $d => $lbl ) {
+		echo '<a class="' . ( $f['d'] === $d ? 'cur' : '' ) . '" href="' . esc_url( $keep( array( 'd' => $d ) ) ) . '">' . esc_html( $lbl ) . '</a> | ';
+	}
+	echo '<a class="' . ( $f['promo'] ? 'cur' : '' ) . '" href="' . esc_url( $keep( array( 'promo' => $f['promo'] ? '' : 1 ) ) ) . '">' . ( $f['promo'] ? '&#10003; Hanya yang mau promo' : 'Hanya yang mau promo' ) . '</a>';
+	echo '</p><form method="get" style="margin:8px 0 12px"><input type="hidden" name="page" value="ac-kontak-wa"><input type="hidden" name="d" value="' . (int) $f['d'] . '">' . ( $f['promo'] ? '<input type="hidden" name="promo" value="1">' : '' ) . ( $f['staff'] ? '<input type="hidden" name="staff" value="1">' : '' );
+	echo '<input type="search" name="q" value="' . esc_attr( $f['q'] ) . '" placeholder="Cari nama / nomor"> <button class="button">Cari</button> ';
+	echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( $keep( array( 'csv' => 1 ) ), 'ac_wl_csv' ) ) . '">Export CSV (sesuai filter)</a> ';
+	echo '<a class="button" href="' . esc_url( wp_nonce_url( add_query_arg( array( 'csv' => 1, 'promo' => 1, 'd' => 0 ), $base ), 'ac_wl_csv' ) ) . '">Export untuk WA blast (semua yang mau promo)</a>';
+	echo '</form>';
+
+	$pg            = isset( $_GET['pg'] ) ? max( 1, (int) $_GET['pg'] ) : 1; // phpcs:ignore
+	list( $rows, $total ) = ac_wl_rows( $f, 100, ( $pg - 1 ) * 100 );
+	echo '<table class="widefat striped acwla-t"><thead><tr><th>Nama</th><th>No. WhatsApp</th><th>Pertama kontak</th><th>Terakhir</th><th>Chat</th><th>Terakhir ke</th><th>Tombol / produk terakhir</th><th>Sumber awal</th><th>Promo</th></tr></thead><tbody>';
+	if ( ! $rows ) {
+		echo '<tr><td colspan="9">Belum ada data untuk filter ini.</td></tr>';
+	}
+	foreach ( $rows as $r ) {
+		$hl = $keep( array( 'hp' => $r->hp ) );
+		echo '<tr><td><a href="' . esc_url( $hl ) . '"><b>' . esc_html( $r->nama ) . '</b></a></td>'
+			. '<td>' . esc_html( ac_wl_fmt( $r->hp ) ) . '<a class="wa" target="_blank" rel="noopener" href="https://wa.me/' . esc_attr( $r->hp ) . '">Chat</a></td>'
+			. '<td>' . esc_html( mysql2date( 'd M Y H:i', $r->t1 ) ) . '</td><td>' . esc_html( mysql2date( 'd M Y H:i', $r->t2 ) ) . '</td>'
+			. '<td><a href="' . esc_url( $hl ) . '">' . (int) $r->n . 'x</a></td>'
+			. '<td>' . esc_html( isset( $names[ $r->ke ] ) ? $names[ $r->ke ] : $r->ke ) . '</td>'
+			. '<td>' . esc_html( $r->btn ) . ( $r->lastp ? '<br><small>' . esc_html( $r->lastp ) . '</small>' : '' ) . '</td>'
+			. '<td>' . esc_html( $r->src ) . '</td><td>' . ( $r->promo ? '<span class="acwla-y">Ya</span>' : '–' ) . '</td></tr>';
+	}
+	echo '</tbody></table>';
+	$pages = (int) ceil( $total / 100 );
+	if ( $pages > 1 ) {
+		echo '<p>Halaman: ';
+		for ( $i = 1; $i <= $pages; $i++ ) {
+			echo $i === $pg ? '<b>' . (int) $i . '</b> ' : '<a href="' . esc_url( $keep( array( 'pg' => $i ) ) ) . '">' . (int) $i . '</a> '; // phpcs:ignore
+		}
+		echo '</p>';
+	}
+	echo '<p style="color:#666;margin-top:14px">' . (int) $total . ' nomor. Klik nama untuk melihat riwayat chat per nomor. Data tes staff disembunyikan (<a href="' . esc_url( $keep( array( 'staff' => $f['staff'] ? '' : 1 ) ) ) . '">' . ( $f['staff'] ? 'sembunyikan' : 'tampilkan' ) . '</a>).</p></div>';
+}
