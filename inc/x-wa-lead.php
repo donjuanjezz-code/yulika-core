@@ -126,7 +126,7 @@ function yk_wl_ajax() {
 	$tp = isset( $p['tipe'] ) ? (string) $p['tipe'] : '';
 	if ( '' === $ua || preg_match( '/bot|crawl|spider|slurp|headless|lighthouse|facebookexternalhit/i', $ua )
 		|| ! empty( $p['web'] ) || ! in_array( $tp, array( 'form', 'klik' ), true )
-		|| ( 'form' === $tp && isset( $p['ms'] ) && (int) $p['ms'] < 400 ) ) {
+		|| ( 'form' === $tp && isset( $p['ms'] ) && (int) $p['ms'] < 250 ) ) {
 		status_header( 204 );
 		exit;
 	}
