@@ -89,12 +89,31 @@ function yk_pv_seo_label( $p ) {
 	return trim( $type . ' ' . $flower );
 }
 
+/* 10 Nov 2026: kata kunci per produk (meta yk_seo_kw, mis. "Papan Bunga Grand Opening") menggantikan label umum di title & meta.
+   Dipakai untuk papan bunga supaya sekretaris/admin kantor yang mencari jenis acara (grand opening, HUT, peresmian, wedding) menemukan produk yang tepat. */
+function yk_pv_seo_kw( $p ) {
+	$kw = trim( (string) get_post_meta( $p->get_id(), 'yk_seo_kw', true ) );
+	return '' !== $kw ? $kw : yk_pv_seo_label( $p );
+}
+
+/* Meta description: papan bunga versi B2B (ukuran, harga, tulisan & logo perusahaan, kirim ke kantor/gedung/venue) */
+function yk_pv_seo_desc( $p, $name, $cap ) {
+	$price = yk_is_soon( $p ) ? 'Segera hadir' : 'Rp' . number_format( (float) $p->get_price(), 0, ',', '.' );
+	if ( has_term( 'flower-boards', 'product_cat', $p->get_id() ) ) {
+		$h    = (int) get_post_meta( $p->get_id(), 'yk_board_h', true );
+		$w    = (int) get_post_meta( $p->get_id(), 'yk_board_w', true );
+		$size = ( $h && $w ) ? ' ' . $h . '×' . $w . ' cm' : '';
+		return yk_pv_seo_kw( $p ) . ' ' . wp_strip_all_tags( $name ) . $size . ', ' . $price . '. Tulisan & logo perusahaan sesuai pesanan, kirim ke kantor, gedung & venue di Jakarta & Bekasi.';
+	}
+	return yk_pv_seo_kw( $p ) . ' ' . wp_strip_all_tags( $name ) . ': ' . $cap . '. ' . $price . ' · Kirim hari yang sama ke Jakarta & Bekasi · Yulika Florist.';
+}
+
 /* Title & meta halaman produk */
 add_filter( 'pre_get_document_title', function ( $t ) {
 	if ( function_exists( 'is_product' ) && is_product() ) {
 		$p = wc_get_product( get_queried_object_id() );
 		if ( yk_pv_can_show( $p ) ) {
-			return get_the_title( $p->get_id() ) . ' – ' . yk_pv_seo_label( $p ) . ' Jakarta | Yulika Florist';
+			return get_the_title( $p->get_id() ) . ' – ' . yk_pv_seo_kw( $p ) . ' Jakarta | Yulika Florist';
 		}
 	}
 	return $t;
@@ -125,7 +144,7 @@ add_action( 'template_redirect', function () {
 
 	add_action( 'wp_head', function () use ( $p, $name, $cap, $price, $img_ids ) {
 		$full = $img_ids ? wp_get_attachment_image_url( $img_ids[0], 'full' ) : '';
-		$desc = yk_pv_seo_label( $p ) . ' ' . wp_strip_all_tags( $name ) . ': ' . $cap . '. ' . ( yk_is_soon( $p ) ? 'Segera hadir' : 'Rp' . number_format( (float) $p->get_price(), 0, ',', '.' ) ) . ' · Kirim hari yang sama ke Jakarta & Bekasi · Yulika Florist.';
+		$desc = yk_pv_seo_desc( $p, $name, $cap );
 		echo '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
 		echo '<meta property="og:type" content="product"><meta property="og:site_name" content="Yulika Florist">' . "\n";
 		echo '<meta property="og:title" content="' . esc_attr( $name . ' – ' . $cap ) . '">' . "\n";

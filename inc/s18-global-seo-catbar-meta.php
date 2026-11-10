@@ -44,9 +44,10 @@ function yk_seo_copy( $slug ) {
 			'Buket bunga (<em>flower bouquet</em>) segar yang dirangkai florist kami di Kelapa Gading — mawar, tulip, lily, dan bunga impor untuk ulang tahun, anniversary, dan wisuda. Kirim hari yang sama ke seluruh Jakarta dan Bekasi.',
 		),
 		'flower-boards'           => array(
-			'Papan Bunga Jakarta – Grand Opening, Wedding & Duka Cita | Yulika',
-			'Papan bunga custom untuk grand opening, ucapan selamat, pernikahan & duka cita. Tulisan sesuai pesanan, kirim ke seluruh Jakarta & Bekasi.',
-			'Papan bunga (<em>flower board</em>) untuk grand opening, ucapan selamat, pernikahan, dan duka cita — tulisan dibuat sesuai pesananmu dan dikirim ke seluruh Jakarta dan Bekasi.',
+			/* 10 Nov 2026: diarahkan ke pembeli B2B (sekretaris/admin kantor): jenis acara kantor + tulisan & logo perusahaan + kirim ke kantor/gedung/venue */
+			'Papan Bunga Jakarta – Grand Opening, Wedding & HUT | Yulika Florist',
+			'Papan bunga grand opening, peresmian kantor, HUT perusahaan & pernikahan mulai {min}. Tulisan & logo perusahaan sesuai pesanan, kirim ke Jakarta & Bekasi.',
+			'Papan bunga (<em>flower board</em>) untuk relasi bisnis dan acara kantor — grand opening, peresmian, HUT perusahaan, selamat &amp; sukses, hingga pernikahan rekan kerja. Tulisan dan logo perusahaan dibuat sesuai pesanan, bisa dikirim pagi (06:00–08:00) ke kantor, gedung, atau venue di seluruh Jakarta dan Bekasi.',
 		),
 		'hampers'                 => array(
 			'Hampers & Parcel Jakarta – Lebaran, Natal, Imlek | Yulika Florist',
