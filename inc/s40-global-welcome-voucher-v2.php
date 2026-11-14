@@ -114,10 +114,10 @@ add_filter('woocommerce_coupon_get_discount_amount', function ($discount, $amoun
 	return $discount * YK_WEL_CAP / $full;
 }, 20, 5);
 
-/* Label: batas maksimal hanya ditampilkan di checkout */
+/* Label: sejak 14 Nov 2026 batas maksimal ditampilkan di semua tempat (instruksi Jess) */
 add_filter('woocommerce_cart_totals_coupon_label', function ($label, $coupon) {
 	if (stripos($coupon->get_code(), 'welcome-') !== 0) return $label;
-	return (function_exists('is_checkout') && is_checkout()) ? 'Welcome voucher 10% (max. Rp 100.000)' : 'Welcome voucher 10%';
+	return 'Welcome voucher 10% (up to Rp100.000)';
 }, 20, 2);
 
 /* Dasbor: info kalau voucher tidak diberikan karena IP/perangkat sudah pernah klaim */

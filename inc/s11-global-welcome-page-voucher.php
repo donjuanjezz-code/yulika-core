@@ -48,7 +48,14 @@ function yk_wel_css() {
 .yk-wel button[type=submit]{width:100%;height:50px;border:0;border-radius:8px;background:#a0784a;color:#fff;font-size:16px;font-weight:600;letter-spacing:.04em;cursor:pointer}
 .yk-wel button[type=submit]:hover{background:#8a6538}
 .yk-wel-fine{font-size:12px;color:#8a8077;margin:12px 0 0;text-align:center}
-.yk-wel-terms{font-size:12px;color:#8a8077;margin:6px 0 0;text-align:center}
+.yk-wel-rules{list-style:none;margin:0 0 22px;padding:14px 16px;background:#fbf7f1;border:1px solid #ece0cf;border-radius:10px;text-align:left}
+.yk-wel-rules-h{font-size:13px;font-weight:700;color:#3d352e;margin:0 0 8px;text-align:left}
+.yk-wel-rules li{position:relative;margin:0;padding:5px 0 5px 28px;font-size:15px;line-height:1.45;color:#3d352e}
+.yk-wel-rules li:before{content:"\\2713";position:absolute;left:0;top:5px;width:19px;height:19px;border-radius:50%;background:#a0784a;color:#fff;font-size:12px;line-height:19px;text-align:center;font-weight:700}
+.yk-wel-rules b{font-weight:700}
+.yk-wel-rules li.yk-wel-rules-h:before{display:none}
+.yk-wel-rules li.yk-wel-rules-h{padding-left:0;font-size:13px}
+.yk-wel h2 small{display:block;font-size:18px;font-weight:600;color:#a0784a;margin-top:4px}
 .yk-wel-login{font-size:14px;margin:18px 0 0;text-align:center}
 .yk-wel-login a,.yk-wel-err a{color:#a0784a;font-weight:600}
 .yk-wel-err{background:#fdf0ef;border:1px solid #f3c9c4;color:#9b2c22;border-radius:8px;padding:10px 14px;margin:0 0 16px;font-size:14px;text-align:left}
@@ -75,7 +82,7 @@ function yk_wel_voucher_box( $i, $heading = '' ) {
 		$h .= '<div class="yk-vch-h">' . esc_html( $heading ) . '</div>';
 	}
 	$h .= '<div class="yk-vch-code">' . esc_html( strtoupper( $i['code'] ) ) . '</div>';
-	$h .= '<div class="yk-vch-meta">10% off &middot; one-time use &middot; valid until ' . esc_html( yk_wel_time( $i['exp'] ) ) . '</div>';
+	$h .= '<div class="yk-vch-meta">10% off, up to Rp100.000 &middot; 1 time use &middot; online orders only &middot; valid until ' . esc_html( yk_wel_time( $i['exp'] ) ) . '</div>';
 	$h .= '<div class="yk-vch-note">Applied automatically at checkout.</div></div>';
 	return $h;
 }
@@ -114,23 +121,26 @@ add_shortcode( 'yk_welcome_form', function () {
 
 	$out .= '<div class="yk-wel" id="yk-welcome">';
 	$out .= '<p class="yk-wel-eyebrow">Welcome to Yulika Florist</p>';
-	$out .= '<h2>Get 10% Off Your First Order</h2>';
-	$out .= '<p class="yk-wel-sub">Sign up to get special offers, updates, gift ideas &amp; more.</p>';
+	/* 14 Nov 2026 (Jess): judul wajib menyebut batas Rp100.000; syarat ditulis sebagai 3 poin pendek di atas form, bahasa setingkat SMP */
+	$out .= '<h2>10% Off <small>up to Rp100.000</small></h2>';
+	$out .= '<p class="yk-wel-sub">A gift for new members. Sign up below to get your voucher.</p>';
+	$out .= '<ul class="yk-wel-rules"><li class="yk-wel-rules-h">How it works</li>';
+	$out .= '<li>Use it within <b>24 hours</b> after you sign up.</li>';
+	$out .= '<li>Only for <b>orders on this website</b> (online).</li>';
+	$out .= '<li>Can be used <b>1 time</b> only.</li></ul>';
 	if ( $err ) {
 		$out .= '<div class="yk-wel-err" role="alert"><ul><li>' . implode( '</li><li>', array_map( 'wp_kses_post', $err ) ) . '</li></ul></div>';
 	}
 	$out .= '<form method="post" action="' . esc_url( get_permalink() ) . '#yk-welcome">';
 	$out .= $f( 'yk_w_email', 'Email', 'email', 'autocomplete="email" placeholder="name@email.com"' );
-	$out .= $f( 'yk_w_name', 'Full Name', 'text', 'autocomplete="name"' );
-	$out .= $f( 'yk_w_wa', 'WhatsApp', 'tel', 'autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxxxx"' );
-	$out .= $f( 'yk_w_pass', 'Password', 'password', 'autocomplete="new-password" minlength="8" placeholder="Minimum 8 characters"' );
-	$out .= $f( 'yk_w_pass2', 'Confirm Password', 'password', 'autocomplete="new-password" minlength="8"' );
+	$out .= $f( 'yk_w_name', 'Your Name', 'text', 'autocomplete="name"' );
+	$out .= $f( 'yk_w_wa', 'WhatsApp Number', 'tel', 'autocomplete="tel" inputmode="tel" placeholder="08xxxxxxxxxx"' );
+	$out .= $f( 'yk_w_pass', 'Password', 'password', 'autocomplete="new-password" minlength="8" placeholder="At least 8 characters"' );
+	$out .= $f( 'yk_w_pass2', 'Type Password Again', 'password', 'autocomplete="new-password" minlength="8"' );
 	$out .= '<p class="yk-hp" aria-hidden="true"><label>Website <input type="text" name="yk_w_site" value="" tabindex="-1" autocomplete="off"></label></p>';
 	$out .= '<input type="hidden" name="yk_wel_go" value="1">' . wp_nonce_field( 'yk_wel', 'yk_wel_nonce', false, false );
-	$out .= '<p class="yk-wel-priv">Your details will only be used to send you personalised offers and emails.</p>';
-	$out .= '<button type="submit">Subscribe</button>';
-	$out .= '<p class="yk-wel-fine">By clicking Subscribe, you agree to receive marketing emails from Yulika Florist.</p>';
-	$out .= '<p class="yk-wel-terms">Voucher valid for 24 hours from sign-up, for one order only.</p>';
+	$out .= '<button type="submit">Sign Up &amp; Get 10% Off</button>';
+	$out .= '<p class="yk-wel-fine">By signing up, you agree to get emails from Yulika Florist. We only use your details to send you offers and news.</p>';
 	$out .= '</form>';
 	$out .= '<p class="yk-wel-login">Already have an account? <a href="' . esc_url( $acct ) . '">Log in</a></p>';
 	$out .= '</div>';
