@@ -58,7 +58,7 @@ add_action( 'wp_footer', function () {
 .yk-cosum-t b{font-size:15px;line-height:1.3;color:#2b2621;font-weight:700}
 .yk-cosum-t span{font-size:13.5px;color:#6b625a}
 .yk-cosum-f{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px dashed #dccdb8;padding-top:9px;font-size:15px;color:#3d352e}
-.yk-cosum-f small{font-size:12px;color:#8a8077;font-weight:400}
+.yk-cosum-f small{display:block;font-size:12px;color:#8a8077;font-weight:400}
 .yk-cosum-f b{font-size:18px;color:#8a5a2b;white-space:nowrap}
 .yk-cobar{position:fixed;left:0;right:0;bottom:0;z-index:99980;background:#fff;border-top:1px solid #e7ded2;box-shadow:0 -4px 16px rgba(60,40,20,.10);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px;font-family:Montserrat,Arial,sans-serif;transition:transform .2s}
 .yk-cobar.hide{transform:translateY(110%)}

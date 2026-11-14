@@ -91,8 +91,8 @@ function yk_coid_map() {
 		'If you have a coupon code, please apply it below.' => 'Kalau punya kode voucher, masukkan di bawah ini.',
 		'>Apply coupon</button>'                 => '>Pakai voucher</button>',
 		'placeholder="Coupon code"'              => 'placeholder="Kode voucher"',
-		'<h3 id="order_review_heading">Your order</h3>' => '<h3 id="order_review_heading">Pesanan Anda</h3>',
-		'<h3 id="order_review_heading">Your Order</h3>' => '<h3 id="order_review_heading">Pesanan Anda</h3>',
+		'id="order_review_heading">Your Order<' => 'id="order_review_heading">Pesanan Anda<',
+		'id="order_review_heading">Your order<' => 'id="order_review_heading">Pesanan Anda<',
 		/* Peta (pesan dari skrip) */
 		'Address not found. Please drag the pin to the exact spot.' => 'Alamat tidak ditemukan. Mohon geser pin ke titik yang tepat.',
 		'Could not load the address details. Please drag the pin to the exact spot.' => 'Detail alamat gagal dimuat. Mohon geser pin ke titik yang tepat.',
