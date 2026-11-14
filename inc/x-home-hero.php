@@ -5,7 +5,7 @@
  * Cara mengembalikan: hapus file ini.
  */
 if ( ! defined( 'YK_HERO_LIVE' ) ) {
-	define( 'YK_HERO_LIVE', false );
+	define( 'YK_HERO_LIVE', true );
 }
 
 function yk_hero_on() {
