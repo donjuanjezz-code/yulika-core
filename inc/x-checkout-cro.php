@@ -109,7 +109,7 @@ var r=po.getBoundingClientRect();show(!(r.top<window.innerHeight-10&&r.bottom>0)
 var tick=0;function onScroll(){if(tick)return;tick=1;requestAnimationFrame(function(){tick=0;watch()})}
 window.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onScroll);
 $(document.body).on('updated_checkout',function(){total();label();watch()});
-$(document).on('change input','form.checkout',function(){label()});
+$(document).on('change input','form.checkout',function(){label();total()});
 total();label();watch();
 })();</script>
 	<?php
