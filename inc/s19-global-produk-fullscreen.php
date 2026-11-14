@@ -201,6 +201,9 @@ body.ykp-page .yk-sbar,body.ykp-page .elementor-location-footer,body.ykp-page fo
 .ykp-price s{font-size:15px;font-weight:500;color:#999;margin-right:8px}
 .ykp-spec{font-size:13px;line-height:1.45;color:#666;margin:0 auto;max-width:520px;background:#f8f4ee;border-radius:8px;padding:8px 10px}
 .ykp-spec b{color:#333}
+.ykp-trust{list-style:none;margin:0 auto 10px;padding:0;max-width:520px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.ykp-trust li{margin:0;padding:6px 10px;border:1px solid #eadfce;border-radius:20px;background:#fff;font-size:12.5px;line-height:1.3;color:#555}
+.ykp-trust li b{color:#3d352e;font-weight:700}
 .ykp-act{display:flex;gap:10px;align-items:stretch;padding:12px 16px 0}
 .ykp-next{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:#a0784a;color:#fff!important;font:700 19px/1 Montserrat,Arial,sans-serif;padding:17px 20px;border-radius:30px;text-decoration:none!important;box-shadow:0 3px 10px rgba(160,120,74,.35)}
 .ykp-next:hover{background:#8a6338}
@@ -218,6 +221,7 @@ body.ykp-page .yk-sbar,body.ykp-page .elementor-location-footer,body.ykp-page fo
  .ykp-cap{font-size:18px}
  .ykp-price{font-size:24px}
  .ykp-spec{margin:0;font-size:14px}
+ .ykp-trust{justify-content:flex-start;margin:0 0 12px}
  .ykp-act{padding:22px 0 0;max-width:460px}
 }
 </style>
@@ -251,6 +255,15 @@ body.ykp-page .yk-sbar,body.ykp-page .elementor-location-footer,body.ykp-page fo
 			<h1><?php echo esc_html( $name ); ?></h1>
 			<p class="ykp-cap"><?php echo esc_html( $cap ); ?></p>
 			<p class="ykp-price"><?php echo $was ? '<s>' . esc_html( $was ) . '</s>' : ''; ?><?php echo esc_html( $price ); ?></p>
+			<?php if ( ! $soon ) : /* 14 Nov 2026: baris kepercayaan dekat tombol (jawab ragu: kapan sampai, ongkir, bisa dipercaya?) */
+				$yk_fee = function_exists( 'yk_zone_fees' ) ? array_filter( array_map( 'floatval', (array) yk_zone_fees() ) ) : array();
+				?>
+			<ul class="ykp-trust">
+				<li><b>Same-day delivery</b> Jakarta &amp; Bekasi</li>
+				<li><b>Delivery from Rp<?php echo esc_html( number_format( $yk_fee ? min( $yk_fee ) : 50000, 0, ',', '.' ) ); ?></b> or free store pickup</li>
+				<li><b>&#9733; 4.7</b> from 270+ Google reviews</li>
+			</ul>
+			<?php endif; ?>
 			<p class="ykp-spec"><b>Specifications:</b> Wrapping and filler flowers may vary; main flowers and style stay the same. If a main flower is out of stock, we&rsquo;ll contact you to agree on an equal-value substitute.</p>
 		</div>
 		<div class="ykp-act">
