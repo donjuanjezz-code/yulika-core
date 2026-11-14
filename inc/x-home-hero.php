@@ -1,6 +1,6 @@
 <?php
 /**
- * Homepage hero: slide foto terbaik per kategori (ganti tiap 1,8 detik) + pesan utama + strip Who / What / Why / Where.
+ * Homepage hero: slide foto terbaik per kategori (ganti tiap 1,8 detik) + pesan utama + deret angka + paragraf perkenalan.
  * Tayang untuk semua pengunjung bila YK_HERO_LIVE = true. Selama false, hanya tampil di /?yk_hero=1 (pratinjau).
  * Cara mengembalikan: hapus file ini.
  */
@@ -84,7 +84,6 @@ function yk_hero_html() {
 	}
 	$n     = count( $slides );
 	$sizes = '(min-width:900px) 54vw, 100vw';
-	$wa    = 'https://wa.me/6281315881538?text=' . rawurlencode( 'Halo Yulika Florist, saya ingin konsultasi pesanan bunga.' );
 	ob_start();
 	?>
 <style id="yk-hero-css">
@@ -110,13 +109,18 @@ function yk_hero_html() {
 .ykh-btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ykh-b{display:inline-block;padding:13px 22px;border-radius:999px;font-weight:700;font-size:14px;letter-spacing:.03em;line-height:1.2;text-decoration:none!important}
 .ykh-b.p{background:#8a5a2b;color:#fff!important}
-.ykh-b.g{background:rgba(255,255,255,.12);color:#fff!important;border:1.5px solid rgba(255,255,255,.8)}
-.ykh-w{display:grid;grid-template-columns:1fr 1fr;background:#fff;border-top:1px solid #efe3d8;border-bottom:1px solid #efe3d8}
-.ykh-w div{padding:14px 14px 15px;border-right:1px solid #efe3d8;border-bottom:1px solid #efe3d8}
-.ykh-w div:nth-child(2n){border-right:0}
-.ykh-w div:nth-child(n+3){border-bottom:0}
-.ykh-w b{display:block;font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a5a2b;margin:0 0 5px}
-.ykh-w span{display:block;font-size:14px;line-height:1.45;color:#2f3337}
+.ykh-b.t{padding:6px 0;border-radius:0;font-weight:600;color:#fff!important;border-bottom:1.5px solid rgba(255,255,255,.85);margin-left:6px}
+.ykh-st{display:grid;grid-template-columns:1fr 1fr;background:#fff;border-bottom:1px solid #efe3d8}
+.ykh-st div{padding:18px 12px 17px;text-align:center}
+.ykh-st div:nth-child(odd){border-right:1px solid #efe3d8}
+.ykh-st div:nth-child(-n+2){border-bottom:1px solid #efe3d8}
+.ykh-st b{display:block;font-weight:500;font-size:30px;line-height:1.1;letter-spacing:-.01em;color:#8a5a2b}
+.ykh-st span{display:block;font-size:13.5px;line-height:1.4;color:#555;margin-top:5px}
+.ykh-ab{background:#fbf7f3;padding:36px 22px 38px;text-align:center}
+.ykh-ab .q{font-family:"Sorts Mill Goudy",Georgia,serif!important;font-size:22px!important;line-height:1.42!important;color:#222;max-width:900px;margin:0 auto!important}
+.ykh-ab .r{display:block;width:44px;height:2px;background:#a0784a;margin:20px auto 16px}
+.ykh-ab .v{font-size:14px!important;line-height:1.65!important;color:#555;margin:0!important}
+.ykh-ab .v a{color:#8a5a2b!important;font-weight:600;text-decoration:none!important;border-bottom:1px solid #a0784a;white-space:nowrap}
 @media(min-width:900px){
 .ykh-in{display:grid;grid-template-columns:46% 54%;align-items:stretch}
 .ykh-media{grid-column:2;grid-row:1;height:72vh;max-height:660px;min-height:480px}
@@ -128,12 +132,16 @@ function yk_hero_html() {
 .ykh-h{color:#222!important;font-size:50px!important;margin:0 0 16px!important}
 .ykh-sub{color:#444;font-size:17px!important;margin:0 0 24px!important}
 .ykh-b{font-size:15px;padding:15px 26px}
-.ykh-b.g{background:#fff;color:#8a5a2b!important;border-color:#a0784a}
-.ykh-w{grid-template-columns:repeat(4,1fr)}
-.ykh-w div{padding:22px 24px 24px;border-bottom:0!important;border-right:1px solid #efe3d8!important}
-.ykh-w div:last-child{border-right:0!important}
-.ykh-w b{font-size:12.5px;margin:0 0 8px}
-.ykh-w span{font-size:15.5px}
+.ykh-b.t{color:#8a5a2b!important;border-bottom-color:#a0784a;margin-left:10px}
+.ykh-st{grid-template-columns:repeat(4,1fr)}
+.ykh-st div{padding:30px 20px 28px;border-bottom:0!important;border-right:1px solid #efe3d8}
+.ykh-st div:last-child{border-right:0}
+.ykh-st b{font-size:44px}
+.ykh-st span{font-size:15px;margin-top:8px}
+.ykh-ab{padding:68px 40px 70px}
+.ykh-ab .q{font-size:32px!important;line-height:1.38!important}
+.ykh-ab .r{margin:28px auto 22px}
+.ykh-ab .v{font-size:15.5px!important}
 }
 @media(min-width:1320px){.ykh-copy{padding-left:calc((100vw - 1240px)/2)}.ykh-h{font-size:56px!important}}
 @media(prefers-reduced-motion:reduce){.ykh-s,.ykh-s img{transition:none}.ykh-s img{transform:none}.ykh-bar{display:none}}
@@ -159,14 +167,19 @@ function yk_hero_html() {
 <p class="ykh-eye">Yulika Florist &middot; Kelapa Gading, Jakarta</p>
 <h2 class="ykh-h">The first florist in Kelapa Gading</h2>
 <p class="ykh-sub">Flowers, hampers and event décor, made in-house and delivered the same day in Jakarta and parts of Bekasi.</p>
-<div class="ykh-btns"><a class="ykh-b p" href="#latest_products">Shop Flowers</a><a class="ykh-b g" href="<?php echo esc_url( $wa ); ?>" target="_blank" rel="noopener">Chat on WhatsApp</a></div>
+<div class="ykh-btns"><a class="ykh-b p" href="#latest_products">Shop Flowers</a><a class="ykh-b t" href="<?php echo esc_url( home_url( '/#event-interior-projects' ) ); ?>">Event &amp; Interior Projects &rarr;</a></div>
 </div>
 </div>
-<div class="ykh-w">
-<div><b>Who</b><span>The first florist in Kelapa Gading, with our own store and florists.</span></div>
-<div><b>What</b><span>Bouquets, flower boards, hampers, wedding and interior décor.</span></div>
-<div><b>Why</b><span>Made in-house. No reseller, no dropship. Same-day delivery.</span></div>
-<div><b>Where</b><span>Jl. Boulevard Raya, Kelapa Gading. Open daily 08:00&ndash;19:00.</span></div>
+<div class="ykh-st">
+<div><b>43</b><span>Event &amp; interior projects</span></div>
+<div><b>100%</b><span>Made in-house</span></div>
+<div><b>Same day</b><span>Delivery in Jakarta &amp; parts of Bekasi</span></div>
+<div><b>7 days</b><span>Open every day, 08:00&ndash;19:00</span></div>
+</div>
+<div class="ykh-ab">
+<p class="q">Yulika is the first florist in Kelapa Gading. Every bouquet, flower board, hamper and event d&eacute;cor is made by our own florists, with flowers from our garden in Puncak and direct importers.</p>
+<span class="r" aria-hidden="true"></span>
+<p class="v">Visit our store at Jl. Boulevard Raya, Kelapa Gading, Jakarta Utara. <a href="<?php echo esc_url( home_url( '/our-story/' ) ); ?>">Our story &rarr;</a></p>
 </div>
 </section>
 <script id="yk-hero-js">
