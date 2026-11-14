@@ -1,6 +1,6 @@
 <?php
 /**
- * Homepage hero: slide foto terbaik per kategori (ganti tiap 1,8 detik) + pesan utama + deret angka + paragraf perkenalan.
+ * Homepage hero: slide foto terbaik per kategori (ganti tiap 1,8 detik) + pesan utama + deret angka.
  * Tayang untuk semua pengunjung bila YK_HERO_LIVE = true. Selama false, hanya tampil di /?yk_hero=1 (pratinjau).
  * Cara mengembalikan: hapus file ini.
  */
@@ -116,11 +116,6 @@ function yk_hero_html() {
 .ykh-st div:nth-child(-n+2){border-bottom:1px solid #efe3d8}
 .ykh-st b{display:block;font-weight:500;font-size:30px;line-height:1.1;letter-spacing:-.01em;color:#8a5a2b}
 .ykh-st span{display:block;font-size:13.5px;line-height:1.4;color:#555;margin-top:5px}
-.ykh-ab{background:#fbf7f3;padding:36px 22px 38px;text-align:center}
-.ykh-ab .q{font-family:"Sorts Mill Goudy",Georgia,serif!important;font-size:22px!important;line-height:1.42!important;color:#222;max-width:900px;margin:0 auto!important}
-.ykh-ab .r{display:block;width:44px;height:2px;background:#a0784a;margin:20px auto 16px}
-.ykh-ab .v{font-size:14px!important;line-height:1.65!important;color:#555;margin:0!important}
-.ykh-ab .v a{color:#8a5a2b!important;font-weight:600;text-decoration:none!important;border-bottom:1px solid #a0784a;white-space:nowrap}
 @media(min-width:900px){
 .ykh-in{display:grid;grid-template-columns:46% 54%;align-items:stretch}
 .ykh-media{grid-column:2;grid-row:1;height:72vh;max-height:660px;min-height:480px}
@@ -138,10 +133,6 @@ function yk_hero_html() {
 .ykh-st div:last-child{border-right:0}
 .ykh-st b{font-size:44px}
 .ykh-st span{font-size:15px;margin-top:8px}
-.ykh-ab{padding:68px 40px 70px}
-.ykh-ab .q{font-size:32px!important;line-height:1.38!important}
-.ykh-ab .r{margin:28px auto 22px}
-.ykh-ab .v{font-size:15.5px!important}
 }
 @media(min-width:1320px){.ykh-copy{padding-left:calc((100vw - 1240px)/2)}.ykh-h{font-size:56px!important}}
 @media(prefers-reduced-motion:reduce){.ykh-s,.ykh-s img{transition:none}.ykh-s img{transform:none}.ykh-bar{display:none}}
@@ -175,11 +166,6 @@ function yk_hero_html() {
 <div><b>100%</b><span>Made in-house</span></div>
 <div><b>Same day</b><span>Delivery in Jakarta &amp; parts of Bekasi</span></div>
 <div><b>7 days</b><span>Open every day, 08:00&ndash;19:00</span></div>
-</div>
-<div class="ykh-ab">
-<p class="q">Yulika is the first florist in Kelapa Gading. Every bouquet, flower board, hamper and event d&eacute;cor is made by our own florists, with flowers from our garden in Puncak and direct importers.</p>
-<span class="r" aria-hidden="true"></span>
-<p class="v">Visit our store at Jl. Boulevard Raya, Kelapa Gading, Jakarta Utara. <a href="<?php echo esc_url( home_url( '/our-story/' ) ); ?>">Our story &rarr;</a></p>
 </div>
 </section>
 <script id="yk-hero-js">
