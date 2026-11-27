@@ -798,7 +798,11 @@ function yk_order_wa_text( $order, $to = 'shop' ) {
 	if ( (float) $order->get_discount_total() > 0 ) {
 		$L[] = 'Discount: -' . yk_money( $order->get_discount_total() );
 	}
-	$L[] = 'Total: ' . yk_money( $order->get_total() ) . ( $order->get_payment_method_title() ? ' (' . $order->get_payment_method_title() . ')' : '' );
+	$pt  = html_entity_decode( wp_strip_all_tags( (string) $order->get_payment_method_title() ), ENT_QUOTES, 'UTF-8' ); // judul tersimpan dengan &amp;
+	$L[] = 'Total: ' . yk_money( $order->get_total() ) . ( $pt ? ' (' . $pt . ')' : '' );
+	if ( 'shop' === $to ) {
+		$L[] = 'Payment status: ' . ( $order->is_paid() ? 'PAID' : 'NOT PAID YET' ); // rekap bukan bukti bayar
+	}
 	if ( (float) $order->get_meta( '_yk_usd_amount' ) > 0 ) {
 		$L[] = 'PayPal amount: US$' . number_format( (float) $order->get_meta( '_yk_usd_amount' ), 2 );
 	}
