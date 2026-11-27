@@ -226,6 +226,14 @@ function yk_wagate_ajax() {
 	if ( ! $order || '' === $key || ! hash_equals( (string) $order->get_order_key(), $key ) ) {
 		wp_send_json_error( null, 403 );
 	}
+	if ( ! empty( $_REQUEST['p'] ) ) { // phpcs:ignore -- konfirmasi SETELAH lunas (halaman terima kasih)
+		if ( ! $order->get_meta( '_yk_wa_paid' ) ) {
+			$order->update_meta_data( '_yk_wa_paid', current_time( 'mysql' ) );
+			$order->save();
+			$order->add_order_note( 'Pembeli menekan tombol "Send WhatsApp confirmation to admin" setelah lunas (tujuan ' . yk_wagate_num_label() . '). Pastikan pesannya masuk di WhatsApp.' );
+		}
+		wp_send_json_success();
+	}
 	if ( ! $order->get_meta( '_yk_wa_sent' ) ) {
 		$order->update_meta_data( '_yk_wa_sent', current_time( 'mysql' ) );
 		$order->save();
@@ -246,11 +254,48 @@ add_action( 'woocommerce_thankyou', function ( $order_id ) {
 	echo '<script>(function(){var C=' . wp_json_encode( $c ) . ',a=document.querySelector(".yk-wa-confirm a");if(!a)return;a.addEventListener("click",function(){var f=new FormData();f.append("action","yk_wagate");f.append("o",C.o);f.append("gk",C.gk);try{if(navigator.sendBeacon&&navigator.sendBeacon(C.ajax,f))return}catch(e){}try{fetch(C.ajax,{method:"POST",body:f,keepalive:true,credentials:"same-origin"})}catch(e){}})})();</script>';
 }, 3 );
 
+/* Halaman terima kasih SETELAH LUNAS: lapisan wajib, satu tombol "Send WhatsApp confirmation to admin". */
+add_action( 'woocommerce_thankyou', function ( $order_id ) {
+	$order = wc_get_order( $order_id );
+	if ( ! YK_WAGATE_LIVE || ! $order ) {
+		return;
+	}
+	if ( ! $order->is_paid() ) {
+		// Midtrans: pembeli bisa tiba sebelum notifikasi lunas masuk. Muat ulang sebentar sampai status berubah.
+		$ts = isset( $_GET['transaction_status'] ) ? sanitize_key( wp_unslash( $_GET['transaction_status'] ) ) : ''; // phpcs:ignore
+		if ( $order->has_status( 'pending' ) && in_array( $ts, array( 'settlement', 'capture' ), true ) ) {
+			echo '<script>(function(){var k="ykpr' . (int) $order->get_id() . '",n=0;try{n=+sessionStorage.getItem(k)||0}catch(e){}if(n<4){try{sessionStorage.setItem(k,n+1)}catch(e){}setTimeout(function(){location.reload()},4000)}})();</script>';
+		}
+		return;
+	}
+	if ( $order->get_meta( '_yk_wa_paid' ) || $order->has_status( 'completed' ) ) {
+		return;
+	}
+	$c = array( 'ajax' => admin_url( 'admin-ajax.php' ), 'o' => $order->get_id(), 'gk' => $order->get_order_key() );
+	?>
+<div id="yk-paid-gate" style="position:fixed;inset:0;z-index:999999;background:rgba(34,34,34,.72);display:flex;align-items:center;justify-content:center;padding:16px">
+<div style="background:#fbfaf9;border-radius:14px;max-width:420px;width:100%;padding:26px 20px;text-align:center;font-family:'Plus Jakarta Sans',Montserrat,Arial,sans-serif;color:#30373e;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+<div style="width:54px;height:54px;border-radius:50%;background:#e7f5ec;color:#1b8a4b;font-size:28px;line-height:54px;margin:0 auto 12px">&#10003;</div>
+<p style="font-family:'Sorts Mill Goudy',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 8px;color:#222">Pembayaran diterima</p>
+<p style="font-size:15px;line-height:1.5;margin:0 0 6px">Pesanan #<?php echo esc_html( $order->get_order_number() ); ?> sudah lunas. Satu langkah terakhir yang wajib: kirim konfirmasi ke WhatsApp admin kami.</p>
+<p style="font-size:13px;line-height:1.5;margin:0 0 16px;color:#666">Payment received. One last required step: send your confirmation to our WhatsApp (<?php echo esc_html( yk_wagate_num_label() ); ?>).</p>
+<a id="yk-paid-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( yk_wagate_wa_url( $order ) ); ?>" style="display:block;background:#1faa59;color:#fff;font-weight:700;font-size:16px;padding:15px 14px;border-radius:10px;text-decoration:none">Send WhatsApp confirmation to admin</a>
+</div></div>
+<script>(function(){var C=<?php echo wp_json_encode( $c ); ?>,g=document.getElementById('yk-paid-gate'),a=document.getElementById('yk-paid-go');if(!g||!a)return;document.body.appendChild(g);
+a.addEventListener('click',function(){var f=new FormData();f.append('action','yk_wagate');f.append('o',C.o);f.append('gk',C.gk);f.append('p','1');var ok=false;try{ok=navigator.sendBeacon&&navigator.sendBeacon(C.ajax,f)}catch(e){}if(!ok){try{fetch(C.ajax,{method:'POST',body:f,keepalive:true,credentials:'same-origin'})}catch(e){}}setTimeout(function(){g.style.display='none'},600)});})();</script>
+	<?php
+}, 1 );
+
 /* 4. Admin: status rekap WhatsApp di halaman order dan di daftar order. */
 function yk_wagate_status_html( $order ) {
 	$sent = (string) $order->get_meta( '_yk_wa_sent' );
+	$paid = (string) $order->get_meta( '_yk_wa_paid' );
+	$pp   = $paid ? '<br><span style="color:#1b8a4b;font-weight:600">lunas: ditekan ' . esc_html( mysql2date( 'j M H:i', $paid ) ) . '</span>' : ( $order->is_paid() ? '<br><span style="color:#b32d2e;font-weight:600">lunas: belum ditekan</span>' : '' );
 	if ( $sent ) {
-		return '<span style="color:#1b8a4b;font-weight:600">ditekan ' . esc_html( mysql2date( 'j M H:i', $sent ) ) . '</span>';
+		return '<span style="color:#1b8a4b;font-weight:600">ditekan ' . esc_html( mysql2date( 'j M H:i', $sent ) ) . '</span>' . $pp;
+	}
+	if ( $pp ) {
+		return ( $order->get_meta( '_yk_gate_next' ) ? '<span style="color:#b32d2e;font-weight:600">belum ditekan</span>' : '' ) . $pp;
 	}
 	if ( $order->get_meta( '_yk_gate_next' ) ) {
 		return '<span style="color:#b32d2e;font-weight:600">belum ditekan</span>';
