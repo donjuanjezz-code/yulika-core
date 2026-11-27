@@ -783,7 +783,14 @@ function yk_order_wa_text( $order, $to = 'shop' ) {
 	$pickup = 'pickup' === $order->get_meta( '_yk_method' );
 	$name   = trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() );
 	$L      = array();
-	if ( 'shop' === $to ) {
+	$paidm  = 'paid' === $to; // konfirmasi PEMBAYARAN dari pembeli ke admin (x-wa-gate.php)
+	if ( $paidm ) {
+		$to  = 'shop';
+		$L[] = 'Hi Yulika Florist, I have completed the payment for order #' . $order->get_order_number() . '.';
+		if ( ! $order->is_paid() ) {
+			$L[] = 'My payment proof (screenshot) is attached in this chat.';
+		}
+	} elseif ( 'shop' === $to ) {
 		$L[] = 'Hi Yulika Florist, I have just placed order #' . $order->get_order_number() . '.';
 	} else {
 		$L[] = 'Hi ' . ( $name ? $name : 'there' ) . ', thank you for ordering at Yulika Florist! Your order #' . $order->get_order_number() . ' has been received.';
@@ -801,8 +808,12 @@ function yk_order_wa_text( $order, $to = 'shop' ) {
 	$pt  = html_entity_decode( wp_strip_all_tags( (string) $order->get_payment_method_title() ), ENT_QUOTES, 'UTF-8' ); // judul tersimpan dengan &amp;
 	$L[] = 'Total: ' . yk_money( $order->get_total() ) . ( $pt ? ' (' . $pt . ')' : '' );
 	if ( 'shop' === $to ) {
-		$L[] = 'Payment status: ' . ( $order->is_paid() ? 'PAID' : 'NOT PAID YET' ); // rekap bukan bukti bayar
-		if ( ! $order->is_paid() && ! $order->has_status( array( 'cancelled', 'refunded' ) ) ) {
+		if ( $paidm ) {
+			$L[] = 'Payment status: ' . ( $order->is_paid() ? 'PAID (verified by system)' : 'PAID BY CUSTOMER - proof attached, please verify' );
+		} else {
+			$L[] = 'Payment status: ' . ( $order->is_paid() ? 'PAID' : 'NOT PAID YET' ); // rekap bukan bukti bayar
+		}
+		if ( ! $paidm && ! $order->is_paid() && ! $order->has_status( array( 'cancelled', 'refunded' ) ) ) {
 			// link lanjut bayar: halaman bayar (Midtrans) atau halaman terima kasih (rekening bank / tombol PayPal)
 			$pl  = $order->has_status( array( 'pending', 'failed' ) ) ? $order->get_checkout_payment_url() : $order->get_checkout_order_received_url();
 			$L[] = 'Lanjutkan pembayaran / Complete your payment here:';
@@ -848,7 +859,7 @@ function yk_order_wa_text( $order, $to = 'shop' ) {
 		if ( '' !== $src ) {
 			$L[] = 'Found us via: ' . $src;
 		}
-		$L[] = 'Please confirm my order. Thank you!';
+		$L[] = $paidm ? 'Please confirm my payment and order. Thank you!' : 'Please confirm my order. Thank you!';
 	} else {
 		$L[] = '';
 		if ( $order->has_status( array( 'on-hold', 'pending' ) ) && 'yk_paypal_usd' === $order->get_payment_method() ) {

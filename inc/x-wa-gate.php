@@ -25,6 +25,12 @@ function yk_wagate_wa_url( $order ) {
 	return 'https://wa.me/' . YK_WAGATE_NUM . '?text=' . rawurlencode( $txt );
 }
 
+/* Tombol konfirmasi PEMBAYARAN: rekap + pernyataan sudah bayar (bukti dilampirkan pembeli di chat). */
+function yk_wagate_paid_url( $order ) {
+	$txt = function_exists( 'yk_order_wa_text' ) ? yk_order_wa_text( $order, 'paid' ) : 'Hi Yulika Florist, I have completed the payment for order #' . $order->get_order_number() . '.';
+	return 'https://wa.me/' . YK_WAGATE_NUM . '?text=' . rawurlencode( $txt );
+}
+
 function yk_wagate_url( $order ) {
 	return add_query_arg( array( 'yk_wa_gate' => $order->get_id(), 'gk' => $order->get_order_key() ), wc_get_checkout_url() );
 }
@@ -230,7 +236,7 @@ function yk_wagate_ajax() {
 		if ( ! $order->get_meta( '_yk_wa_paid' ) ) {
 			$order->update_meta_data( '_yk_wa_paid', current_time( 'mysql' ) );
 			$order->save();
-			$order->add_order_note( 'Pembeli menekan tombol "Send WhatsApp confirmation to admin" setelah lunas (tujuan ' . yk_wagate_num_label() . '). Pastikan pesannya masuk di WhatsApp.' );
+			$order->add_order_note( 'Pembeli menekan tombol konfirmasi pembayaran via WhatsApp (tujuan ' . yk_wagate_num_label() . '). ' . ( $order->is_paid() ? 'Status sudah lunas menurut sistem.' : 'BELUM terverifikasi: cek bukti bayar di WhatsApp dan dana masuk, lalu ubah status ke Processing.' ) );
 		}
 		wp_send_json_success();
 	}
@@ -254,35 +260,72 @@ add_action( 'woocommerce_thankyou', function ( $order_id ) {
 	echo '<script>(function(){var C=' . wp_json_encode( $c ) . ',a=document.querySelector(".yk-wa-confirm a");if(!a)return;a.addEventListener("click",function(){var f=new FormData();f.append("action","yk_wagate");f.append("o",C.o);f.append("gk",C.gk);try{if(navigator.sendBeacon&&navigator.sendBeacon(C.ajax,f))return}catch(e){}try{fetch(C.ajax,{method:"POST",body:f,keepalive:true,credentials:"same-origin"})}catch(e){}})})();</script>';
 }, 3 );
 
-/* Halaman terima kasih SETELAH LUNAS: lapisan wajib, satu tombol "Send WhatsApp confirmation to admin". */
+/* Konfirmasi ke-2 (PEMBAYARAN), semua kanal, di halaman terima kasih:
+   - Lunas menurut sistem (Midtrans): lapisan wajib satu tombol.
+   - Menunggu verifikasi (transfer bank, PayPal): kartu + bar melekat "kirim bukti pembayaran" sampai ditekan. */
+function yk_wagate_paid_js( $order ) {
+	$c = array( 'ajax' => admin_url( 'admin-ajax.php' ), 'o' => $order->get_id(), 'gk' => $order->get_order_key() );
+	return 'function ykPaidRec(){var C=' . wp_json_encode( $c ) . ',f=new FormData();f.append("action","yk_wagate");f.append("o",C.o);f.append("gk",C.gk);f.append("p","1");var ok=false;try{ok=navigator.sendBeacon&&navigator.sendBeacon(C.ajax,f)}catch(e){}if(!ok){try{fetch(C.ajax,{method:"POST",body:f,keepalive:true,credentials:"same-origin"})}catch(e){}}}';
+}
 add_action( 'woocommerce_thankyou', function ( $order_id ) {
 	$order = wc_get_order( $order_id );
-	if ( ! YK_WAGATE_LIVE || ! $order ) {
+	if ( ! YK_WAGATE_LIVE || ! $order || $order->has_status( array( 'cancelled', 'refunded', 'failed', 'completed' ) ) ) {
 		return;
 	}
-	if ( ! $order->is_paid() ) {
-		// Midtrans: pembeli bisa tiba sebelum notifikasi lunas masuk. Muat ulang sebentar sampai status berubah.
+	$done = (string) $order->get_meta( '_yk_wa_paid' );
+	$url  = yk_wagate_paid_url( $order );
+	$num  = yk_wagate_num_label();
+	$no   = $order->get_order_number();
+	$btn  = 'display:block;background:#1faa59;color:#fff;font-weight:700;font-size:16px;line-height:1.3;padding:15px 14px;border-radius:10px;text-decoration:none;text-align:center';
+	$ff   = "font-family:'Plus Jakarta Sans',Montserrat,Arial,sans-serif;color:#30373e";
+
+	if ( $order->is_paid() ) {
+		if ( $done ) {
+			return;
+		}
+		?>
+<style>.yk-wa-confirm{display:none!important}</style>
+<div id="yk-paid-gate" style="position:fixed;inset:0;z-index:999999;background:rgba(34,34,34,.72);display:flex;align-items:center;justify-content:center;padding:16px">
+<div style="background:#fbfaf9;border-radius:14px;max-width:420px;width:100%;padding:26px 20px;text-align:center;<?php echo $ff; // phpcs:ignore ?>;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+<div style="width:54px;height:54px;border-radius:50%;background:#e7f5ec;color:#1b8a4b;font-size:28px;line-height:54px;margin:0 auto 12px">&#10003;</div>
+<p style="font-family:'Sorts Mill Goudy',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 8px;color:#222">Pembayaran diterima</p>
+<p style="font-size:15px;line-height:1.5;margin:0 0 6px">Pesanan #<?php echo esc_html( $no ); ?> sudah lunas. Langkah terakhir yang wajib: kirim konfirmasi pembayaran dan rekap pesanan ke WhatsApp admin kami.</p>
+<p style="font-size:13px;line-height:1.5;margin:0 0 16px;color:#666">Payment received. Last required step: send your payment confirmation and order summary to our WhatsApp (<?php echo esc_html( $num ); ?>).</p>
+<a id="yk-paid-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>" style="<?php echo $btn; // phpcs:ignore ?>">Kirim Konfirmasi Pembayaran via WhatsApp</a>
+</div></div>
+<script>(function(){<?php echo yk_wagate_paid_js( $order ); // phpcs:ignore ?>;var g=document.getElementById('yk-paid-gate'),a=document.getElementById('yk-paid-go');if(!g||!a)return;document.body.appendChild(g);a.addEventListener('click',function(){ykPaidRec();setTimeout(function(){g.style.display='none'},600)});})();</script>
+		<?php
+		return;
+	}
+
+	// Midtrans belum lunas: pembeli bisa tiba sebelum notifikasi lunas masuk. Muat ulang sebentar sampai status berubah.
+	if ( $order->has_status( 'pending' ) ) {
 		$ts = isset( $_GET['transaction_status'] ) ? sanitize_key( wp_unslash( $_GET['transaction_status'] ) ) : ''; // phpcs:ignore
-		if ( $order->has_status( 'pending' ) && in_array( $ts, array( 'settlement', 'capture' ), true ) ) {
+		if ( in_array( $ts, array( 'settlement', 'capture' ), true ) ) {
 			echo '<script>(function(){var k="ykpr' . (int) $order->get_id() . '",n=0;try{n=+sessionStorage.getItem(k)||0}catch(e){}if(n<4){try{sessionStorage.setItem(k,n+1)}catch(e){}setTimeout(function(){location.reload()},4000)}})();</script>';
 		}
 		return;
 	}
-	if ( $order->get_meta( '_yk_wa_paid' ) || $order->has_status( 'completed' ) ) {
+	if ( ! $order->has_status( 'on-hold' ) ) {
 		return;
 	}
-	$c = array( 'ajax' => admin_url( 'admin-ajax.php' ), 'o' => $order->get_id(), 'gk' => $order->get_order_key() );
+	// Transfer bank / PayPal: pembeli membayar di luar situs, lalu WAJIB mengirim bukti.
 	?>
-<div id="yk-paid-gate" style="position:fixed;inset:0;z-index:999999;background:rgba(34,34,34,.72);display:flex;align-items:center;justify-content:center;padding:16px">
-<div style="background:#fbfaf9;border-radius:14px;max-width:420px;width:100%;padding:26px 20px;text-align:center;font-family:'Plus Jakarta Sans',Montserrat,Arial,sans-serif;color:#30373e;box-shadow:0 10px 40px rgba(0,0,0,.3)">
-<div style="width:54px;height:54px;border-radius:50%;background:#e7f5ec;color:#1b8a4b;font-size:28px;line-height:54px;margin:0 auto 12px">&#10003;</div>
-<p style="font-family:'Sorts Mill Goudy',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 8px;color:#222">Pembayaran diterima</p>
-<p style="font-size:15px;line-height:1.5;margin:0 0 6px">Pesanan #<?php echo esc_html( $order->get_order_number() ); ?> sudah lunas. Satu langkah terakhir yang wajib: kirim konfirmasi ke WhatsApp admin kami.</p>
-<p style="font-size:13px;line-height:1.5;margin:0 0 16px;color:#666">Payment received. One last required step: send your confirmation to our WhatsApp (<?php echo esc_html( yk_wagate_num_label() ); ?>).</p>
-<a id="yk-paid-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( yk_wagate_wa_url( $order ) ); ?>" style="display:block;background:#1faa59;color:#fff;font-weight:700;font-size:16px;padding:15px 14px;border-radius:10px;text-decoration:none">Send WhatsApp confirmation to admin</a>
-</div></div>
-<script>(function(){var C=<?php echo wp_json_encode( $c ); ?>,g=document.getElementById('yk-paid-gate'),a=document.getElementById('yk-paid-go');if(!g||!a)return;document.body.appendChild(g);
-a.addEventListener('click',function(){var f=new FormData();f.append('action','yk_wagate');f.append('o',C.o);f.append('gk',C.gk);f.append('p','1');var ok=false;try{ok=navigator.sendBeacon&&navigator.sendBeacon(C.ajax,f)}catch(e){}if(!ok){try{fetch(C.ajax,{method:'POST',body:f,keepalive:true,credentials:'same-origin'})}catch(e){}}setTimeout(function(){g.style.display='none'},600)});})();</script>
+<style>.yk-wa-confirm{display:none!important}body.yk-proof-on{padding-bottom:92px!important}</style>
+<div id="yk-proof" class="<?php echo $done ? 'done' : ''; ?>" style="margin:0 0 24px;padding:18px;border:2px solid #1faa59;background:#f2fbf5;border-radius:12px;text-align:center;<?php echo $ff; // phpcs:ignore ?>">
+<p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#222">Langkah 2 (wajib): kirim bukti pembayaran</p>
+<p style="margin:0 0 6px;font-size:14.5px;line-height:1.5">Setelah membayar, tekan tombol di bawah lalu lampirkan foto/screenshot bukti bayar di WhatsApp. Pesanan #<?php echo esc_html( $no ); ?> diproses setelah bukti kami terima.</p>
+<p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#666">Required: after paying, tap the button and attach your payment proof in WhatsApp (<?php echo esc_html( $num ); ?>). We process your order once we receive it.</p>
+<a class="yk-proof-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>" style="<?php echo $btn; // phpcs:ignore ?>"><?php echo $done ? 'Buka WhatsApp lagi' : 'Sudah Bayar: Kirim Bukti via WhatsApp'; ?></a>
+<p id="yk-proof-ok" style="margin:12px 0 0;font-size:14px;color:#1b8a4b;font-weight:600;<?php echo $done ? '' : 'display:none'; ?>">Terima kasih. Admin akan memeriksa bukti dan mengonfirmasi lewat WhatsApp.</p>
+</div>
+		<?php if ( ! $done ) : ?>
+<div id="yk-proof-bar" style="position:fixed;left:0;right:0;bottom:0;z-index:999998;background:#fbfaf9;border-top:1px solid #e3d9cc;box-shadow:0 -4px 18px rgba(0,0,0,.12);padding:10px 12px calc(10px + env(safe-area-inset-bottom))">
+<a class="yk-proof-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>" style="<?php echo $btn; // phpcs:ignore ?>;max-width:520px;margin:0 auto">Sudah Bayar: Kirim Bukti via WhatsApp</a>
+</div>
+<script>(function(){<?php echo yk_wagate_paid_js( $order ); // phpcs:ignore ?>;var bar=document.getElementById('yk-proof-bar');if(bar){document.body.appendChild(bar);document.body.classList.add('yk-proof-on')}
+[].forEach.call(document.querySelectorAll('.yk-proof-go'),function(a){a.addEventListener('click',function(){ykPaidRec();setTimeout(function(){if(bar){bar.style.display='none';document.body.classList.remove('yk-proof-on')}var ok=document.getElementById('yk-proof-ok');if(ok)ok.style.display='';var b=document.querySelector('#yk-proof .yk-proof-go');if(b)b.textContent='Buka WhatsApp lagi'},600)})});})();</script>
+		<?php endif; ?>
 	<?php
 }, 1 );
 
@@ -290,7 +333,7 @@ a.addEventListener('click',function(){var f=new FormData();f.append('action','yk
 function yk_wagate_status_html( $order ) {
 	$sent = (string) $order->get_meta( '_yk_wa_sent' );
 	$paid = (string) $order->get_meta( '_yk_wa_paid' );
-	$pp   = $paid ? '<br><span style="color:#1b8a4b;font-weight:600">lunas: ditekan ' . esc_html( mysql2date( 'j M H:i', $paid ) ) . '</span>' : ( $order->is_paid() ? '<br><span style="color:#b32d2e;font-weight:600">lunas: belum ditekan</span>' : '' );
+	$pp   = $paid ? '<br><span style="color:#1b8a4b;font-weight:600">bukti bayar: ditekan ' . esc_html( mysql2date( 'j M H:i', $paid ) ) . '</span>' : ( ( $order->is_paid() || $order->has_status( 'on-hold' ) ) ? '<br><span style="color:#b32d2e;font-weight:600">bukti bayar: belum ditekan</span>' : '' );
 	if ( $sent ) {
 		return '<span style="color:#1b8a4b;font-weight:600">ditekan ' . esc_html( mysql2date( 'j M H:i', $sent ) ) . '</span>' . $pp;
 	}
