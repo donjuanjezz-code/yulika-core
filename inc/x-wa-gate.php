@@ -4,7 +4,7 @@
  * Alur: checkout → halaman gerbang (1 tombol: kirim rekap pesanan ke WhatsApp admin) → pembayaran / halaman terima kasih.
  *
  * - Nomor tujuan rekap: YK_WAGATE_NUM.
- * - YK_WAGATE_LIVE = false → pembeli tidak terpengaruh; halaman contoh tetap bisa dilihat di /checkout/?yk_wa_gate=demo
+ * - YK_WAGATE_LIVE = true sejak 27 Nov 2026 ("ok tayang"). false → pembeli tidak terpengaruh. Contoh tampilan: /checkout/?yk_wa_gate=demo
  * - Yang tercatat hanya "tombol ditekan" (meta _yk_wa_sent + catatan order). Terkirim atau tidaknya pesan tidak bisa
  *   dibaca dari website: itu terjadi di aplikasi WhatsApp pembeli.
  * - Cara mengembalikan: hapus file ini. Tombol di halaman terima kasih otomatis kembali ke nomor lama.
@@ -13,7 +13,7 @@ if ( ! defined( 'YK_WAGATE_NUM' ) ) {
 	define( 'YK_WAGATE_NUM', '6285694328188' );
 }
 if ( ! defined( 'YK_WAGATE_LIVE' ) ) {
-	define( 'YK_WAGATE_LIVE', false );
+	define( 'YK_WAGATE_LIVE', true );
 }
 
 function yk_wagate_num_label() {
@@ -34,9 +34,13 @@ function yk_wagate_divert( $redirect, $order ) {
 	if ( ! YK_WAGATE_LIVE || ! $order || ! $redirect || $order->get_meta( '_yk_wa_sent' ) ) {
 		return $redirect;
 	}
-	$order->update_meta_data( '_yk_gate_next', esc_url_raw( $redirect ) );
-	$order->save();
-	return yk_wagate_url( $order );
+	try {
+		$order->update_meta_data( '_yk_gate_next', esc_url_raw( $redirect ) );
+		$order->save();
+		return yk_wagate_url( $order );
+	} catch ( \Throwable $e ) {
+		return $redirect; // apa pun yang gagal di sini tidak boleh menghalangi pembayaran
+	}
 }
 add_filter( 'woocommerce_payment_successful_result', function ( $result, $order_id = 0 ) {
 	if ( is_array( $result ) && ! empty( $result['redirect'] ) && ( ! isset( $result['result'] ) || 'success' === $result['result'] ) ) {
