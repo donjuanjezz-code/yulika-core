@@ -869,7 +869,8 @@ add_action( 'woocommerce_thankyou', function ( $order_id ) {
 	if ( ! $order ) {
 		return;
 	}
-	$url = 'https://wa.me/6281315881538?text=' . rawurlencode( yk_order_wa_text( $order, 'shop' ) );
+	$num = ( defined( 'YK_WAGATE_LIVE' ) && YK_WAGATE_LIVE && defined( 'YK_WAGATE_NUM' ) ) ? YK_WAGATE_NUM : '6281315881538'; // rekap order: nomor gerbang WhatsApp (x-wa-gate.php)
+	$url = 'https://wa.me/' . $num . '?text=' . rawurlencode( yk_order_wa_text( $order, 'shop' ) );
 	echo '<div class="yk-wa-confirm" style="margin:0 0 24px;padding:18px;border:1px solid #cfe6cf;background:#f1f8f1;border-radius:10px;text-align:center">';
 	echo '<p style="margin:0 0 6px;font-weight:600;font-size:16px">Confirm your order on WhatsApp</p>';
 	echo '<p style="margin:0 0 14px;font-size:14px;color:#4a4a4a">Tap the button to send your order details to our team. We will reply on WhatsApp to confirm your order and payment.</p>';
