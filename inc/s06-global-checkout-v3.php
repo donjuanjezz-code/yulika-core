@@ -802,6 +802,12 @@ function yk_order_wa_text( $order, $to = 'shop' ) {
 	$L[] = 'Total: ' . yk_money( $order->get_total() ) . ( $pt ? ' (' . $pt . ')' : '' );
 	if ( 'shop' === $to ) {
 		$L[] = 'Payment status: ' . ( $order->is_paid() ? 'PAID' : 'NOT PAID YET' ); // rekap bukan bukti bayar
+		if ( ! $order->is_paid() && ! $order->has_status( array( 'cancelled', 'refunded' ) ) ) {
+			// link lanjut bayar: halaman bayar (Midtrans) atau halaman terima kasih (rekening bank / tombol PayPal)
+			$pl  = $order->has_status( array( 'pending', 'failed' ) ) ? $order->get_checkout_payment_url() : $order->get_checkout_order_received_url();
+			$L[] = 'Lanjutkan pembayaran / Complete your payment here:';
+			$L[] = $pl;
+		}
 	}
 	if ( (float) $order->get_meta( '_yk_usd_amount' ) > 0 ) {
 		$L[] = 'PayPal amount: US$' . number_format( (float) $order->get_meta( '_yk_usd_amount' ), 2 );
