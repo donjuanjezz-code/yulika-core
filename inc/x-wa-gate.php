@@ -291,7 +291,7 @@ add_action( 'woocommerce_thankyou', function ( $order_id ) {
 <p style="font-family:'Sorts Mill Goudy',Georgia,serif;font-size:24px;line-height:1.25;margin:0 0 8px;color:#222">Pembayaran diterima</p>
 <p style="font-size:15px;line-height:1.5;margin:0 0 6px">Pesanan #<?php echo esc_html( $no ); ?> sudah lunas. Langkah terakhir yang wajib: kirim konfirmasi pembayaran dan rekap pesanan ke WhatsApp admin kami.</p>
 <p style="font-size:13px;line-height:1.5;margin:0 0 16px;color:#666">Payment received. Last required step: send your payment confirmation and order summary to our WhatsApp (<?php echo esc_html( $num ); ?>).</p>
-<a id="yk-paid-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>" style="<?php echo $btn; // phpcs:ignore ?>">Kirim Konfirmasi Pembayaran via WhatsApp</a>
+<a id="yk-paid-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_attr( $url ); // esc_url membuang %0A (baris baru) ?>" style="<?php echo $btn; // phpcs:ignore ?>">Kirim Konfirmasi Pembayaran via WhatsApp</a>
 </div></div>
 <script>(function(){<?php echo yk_wagate_paid_js( $order ); // phpcs:ignore ?>;var g=document.getElementById('yk-paid-gate'),a=document.getElementById('yk-paid-go');if(!g||!a)return;document.body.appendChild(g);a.addEventListener('click',function(){ykPaidRec();setTimeout(function(){g.style.display='none'},600)});})();</script>
 		<?php
@@ -316,12 +316,12 @@ add_action( 'woocommerce_thankyou', function ( $order_id ) {
 <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#222">Langkah 2 (wajib): kirim bukti pembayaran</p>
 <p style="margin:0 0 6px;font-size:14.5px;line-height:1.5">Setelah membayar, tekan tombol di bawah lalu lampirkan foto/screenshot bukti bayar di WhatsApp. Pesanan #<?php echo esc_html( $no ); ?> diproses setelah bukti kami terima.</p>
 <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#666">Required: after paying, tap the button and attach your payment proof in WhatsApp (<?php echo esc_html( $num ); ?>). We process your order once we receive it.</p>
-<a class="yk-proof-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>" style="<?php echo $btn; // phpcs:ignore ?>"><?php echo $done ? 'Buka WhatsApp lagi' : 'Sudah Bayar: Kirim Bukti via WhatsApp'; ?></a>
+<a class="yk-proof-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_attr( $url ); // esc_url membuang %0A (baris baru) ?>" style="<?php echo $btn; // phpcs:ignore ?>"><?php echo $done ? 'Buka WhatsApp lagi' : 'Sudah Bayar: Kirim Bukti via WhatsApp'; ?></a>
 <p id="yk-proof-ok" style="margin:12px 0 0;font-size:14px;color:#1b8a4b;font-weight:600;<?php echo $done ? '' : 'display:none'; ?>">Terima kasih. Admin akan memeriksa bukti dan mengonfirmasi lewat WhatsApp.</p>
 </div>
 		<?php if ( ! $done ) : ?>
 <div id="yk-proof-bar" style="position:fixed;left:0;right:0;bottom:0;z-index:999998;background:#fbfaf9;border-top:1px solid #e3d9cc;box-shadow:0 -4px 18px rgba(0,0,0,.12);padding:10px 12px calc(10px + env(safe-area-inset-bottom))">
-<a class="yk-proof-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_url( $url ); ?>" style="<?php echo $btn; // phpcs:ignore ?>;max-width:520px;margin:0 auto">Sudah Bayar: Kirim Bukti via WhatsApp</a>
+<a class="yk-proof-go" data-wa-keep="1" target="_blank" rel="noopener" href="<?php echo esc_attr( $url ); // esc_url membuang %0A (baris baru) ?>" style="<?php echo $btn; // phpcs:ignore ?>;max-width:520px;margin:0 auto">Sudah Bayar: Kirim Bukti via WhatsApp</a>
 </div>
 <script>(function(){<?php echo yk_wagate_paid_js( $order ); // phpcs:ignore ?>;var bar=document.getElementById('yk-proof-bar');if(bar){document.body.appendChild(bar);document.body.classList.add('yk-proof-on')}
 [].forEach.call(document.querySelectorAll('.yk-proof-go'),function(a){a.addEventListener('click',function(){ykPaidRec();setTimeout(function(){if(bar){bar.style.display='none';document.body.classList.remove('yk-proof-on')}var ok=document.getElementById('yk-proof-ok');if(ok)ok.style.display='';var b=document.querySelector('#yk-proof .yk-proof-go');if(b)b.textContent='Buka WhatsApp lagi'},600)})});})();</script>
