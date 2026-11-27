@@ -10,7 +10,7 @@
  * - Cara mengembalikan: hapus file ini. Tombol di halaman terima kasih otomatis kembali ke nomor lama.
  */
 if ( ! defined( 'YK_WAGATE_NUM' ) ) {
-	define( 'YK_WAGATE_NUM', '6285694328188' );
+	define( 'YK_WAGATE_NUM', '6281315881538' );
 }
 if ( ! defined( 'YK_WAGATE_LIVE' ) ) {
 	define( 'YK_WAGATE_LIVE', true );
